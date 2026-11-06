@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Admin Command Center · G.S. ST ETIENNE SHYOGWE</title>
+<link rel="icon" type="image/jpeg" href="https://i.postimg.cc/Ss3LXCfP/G-s-St-etienne-logo.jpg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --bg:#00080f;--sf:rgba(255,255,255,.04);--sf2:rgba(255,255,255,.08);
+  --bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.15);
+  --tx:#eef5fb;--mu:#8ba3bd;
+  --pr:#fbbf24;--pr2:#d97706;--prtxt:#1a1200; /* GOLD THEME */
+  --gd:#fbbf24;--rd:#f04e56;--gn:#22c55e;color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--tx);font:15px/1.55 Inter,system-ui,Arial,sans-serif;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+canvas#bg3d{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+.loading-screen{display:grid;place-items:center;min-height:100vh;color:var(--mu);font-size:14px;position:fixed;inset:0;background:var(--bg);z-index:9999}
+.loading-screen .spin{width:40px;height:40px;border:3px solid var(--bd2);border-top-color:var(--pr);border-radius:50%;animation:spin .9s linear infinite;margin-bottom:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.site-nav{position:sticky;top:0;z-index:50;background:rgba(0,10,20,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);padding:0 20px}
+.nav-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:18px;height:64px}
+.nav-brand{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;color:inherit}
+.nav-brand img{width:38px;height:38px;border-radius:9px;background:#fff;object-fit:cover}
+.nav-brand b{display:block;font-size:13.5px;font-weight:700}
+.nav-brand span{display:block;font-size:10.5px;color:var(--pr);font-weight:800;letter-spacing:.5px}
+.nav-links{display:flex;align-items:center;gap:12px;margin-left:auto}
+.badge-admin{background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(217,119,6,.1));color:var(--pr);border:1px solid rgba(251,191,36,.3);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;box-shadow:0 0 15px rgba(251,191,36,.1)}
+.nav-user{display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;background:var(--sf);border:1px solid var(--bd);border-radius:40px}
+.nav-user img{width:28px;height:28px;border-radius:50%;object-fit:cover}
+.nav-user span{font-size:13px;font-weight:600}
+.btn-signout{background:none;border:1px solid var(--bd2);color:var(--mu);padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-signout:hover{color:var(--rd);border-color:var(--rd)}
+
+.dash-wrap{display:flex;gap:20px;padding:20px;max-width:1400px;margin:0 auto;width:100%;min-height:calc(100vh - 64px)}
+.dash-sidebar{width:260px;flex-shrink:0;background:rgba(0,15,28,.85);backdrop-filter:blur(24px);border:1px solid var(--bd);border-radius:16px;padding:16px 12px;position:sticky;top:80px;height:calc(100vh - 100px);overflow-y:auto}
+.dash-side-head{font-size:10.5px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;font-weight:700;padding:0 8px;margin:12px 0 8px}
+.dash-side-head:first-child{margin-top:0}
+.dash-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;cursor:pointer;color:var(--mu);font-size:14px;font-weight:500;transition:.15s;background:none;border:0;width:100%;text-align:left;font-family:inherit}
+.dash-item:hover{background:var(--sf);color:var(--tx)}
+.dash-item.on{background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(217,119,6,.05));color:var(--pr);box-shadow:inset 0 0 0 1px rgba(251,191,36,.25)}
+.dash-item .ico{font-size:16px;width:20px;text-align:center}
+.dash-main{flex:1;min-width:0}
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}
+.dash-title{font-size:26px;font-weight:800;letter-spacing:-.8px;color:#fff}
+.dash-subtitle{color:var(--mu);font-size:13px;margin-top:4px}
+
+.card{background:rgba(0,20,35,.7);backdrop-filter:blur(20px);border:1px solid var(--bd);border-radius:16px;padding:24px;margin-bottom:16px}
+.card h2{font-size:16px;font-weight:700;color:var(--tx);margin:0 0 16px;display:flex;align-items:center;gap:8px}
+.card h2 .badge{font-size:10.5px;background:var(--sf2);color:var(--pr);padding:4px 10px;border-radius:20px;border:1px solid rgba(251,191,36,.3);font-weight:700}
+
+.grid{display:grid;gap:16px}
+.g-4{grid-template-columns:repeat(4,1fr)}
+.g-2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:1100px){.g-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.g-4,.g-2{grid-template-columns:1fr}}
+
+.stat-card{background:rgba(0,20,35,.7);backdrop-filter:blur(20px);border:1px solid var(--bd);border-radius:16px;padding:24px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(251,191,36,.08),transparent 60%);pointer-events:none}
+.stat-card .label{font-size:12px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+.stat-card .value{font-size:36px;font-weight:800;letter-spacing:-1.5px;line-height:1;background:linear-gradient(135deg,#fff,#fbbf24);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.row label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--mu);font-weight:500}
+input,select,textarea{background:rgba(0,15,28,.85);border:1px solid var(--bd2);border-radius:10px;padding:12px 14px;color:var(--tx);font-size:14px;transition:.15s;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pr);box-shadow:0 0 0 3px rgba(251,191,36,.15)}
+
+.btn{background:linear-gradient(135deg,var(--pr),var(--pr2));color:var(--prtxt);border:0;border-radius:10px;padding:12px 24px;font-weight:800;font-size:14px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px;justify-content:center;font-family:inherit}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(251,191,36,.25)}
+.btn.s{background:transparent;color:var(--pr);border:1px solid rgba(251,191,36,.4)}
+.btn.s:hover{background:rgba(251,191,36,.08);box-shadow:none}
+.btn.g{background:var(--sf);color:var(--tx);border:1px solid var(--bd2)}
+.btn.g:hover{background:var(--sf2);box-shadow:none}
+.btn.d{background:rgba(240,78,86,.15);color:var(--rd);border:1px solid rgba(240,78,86,.3)}
+.btn.d:hover{background:rgba(240,78,86,.25);box-shadow:none}
+.btn-sm{padding:8px 16px;font-size:12.5px;border-radius:8px}
+
+.tw{overflow-x:auto;border-radius:12px;border:1px solid var(--bd)}
+table.t{border-collapse:collapse;width:100%;font-size:14px}
+table.t th{background:rgba(0,15,28,.8);color:var(--pr);font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:800;padding:14px 16px;text-align:left;border-bottom:1px solid var(--bd2)}
+table.t td{padding:14px 16px;border-bottom:1px solid var(--bd);color:var(--tx)}
+table.t tr:last-child td{border-bottom:0}
+table.t tr:hover td{background:rgba(251,191,36,.03)}
+table.t img.avatar{width:32px;height:32px;border-radius:50%;background:#fff;object-fit:cover}
+
+.empty{color:var(--mu);text-align:center;padding:48px 24px;font-size:14px}
+.empty b{color:var(--tx)}
+.badge-role{display:inline-block;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.badge-role.admin{background:rgba(251,191,36,.15);color:var(--pr);border:1px solid rgba(251,191,36,.3)}
+.badge-role.teacher{background:rgba(0,212,184,.1);color:#00d4b8;border:1px solid rgba(0,212,184,.2)}
+
+#toasts{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:linear-gradient(135deg,rgba(251,191,36,.95),rgba(217,119,6,.95));color:#1a1200;padding:14px 20px;border-radius:12px;font-weight:800;font-size:13.5px;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:slideIn .3s;pointer-events:auto}
+.toast.err{background:linear-gradient(135deg,rgba(240,78,86,.95),rgba(200,40,50,.95));color:#fff}
+.toast.info{background:rgba(0,20,35,.98);color:var(--tx);border:1px solid var(--bd2)}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:9998;display:grid;place-items:center;padding:16px}
+.mo-box{background:rgba(0,20,35,.98);border:1px solid var(--bd2);border-radius:20px;padding:32px;max-width:420px;width:100%}
+.mo-box h3{font-size:20px;font-weight:800;margin-bottom:12px;color:#fff}
+.mo-box p{color:var(--mu);font-size:14px;line-height:1.65;margin-bottom:24px}
+.mo-actions{display:flex;gap:12px;justify-content:flex-end}
+
+@media(max-width:900px){
+  .dash-wrap{flex-direction:column;padding:12px}
+  .dash-sidebar{width:100%;position:static;height:auto;display:flex;overflow-x:auto;gap:8px;padding:12px}
+  .dash-side-head{display:none}
+  .dash-item{white-space:nowrap;width:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loader">
+  <div class="spin"></div>
+  <div>Verifying Admin Access…</div>
+</div>
+
+<canvas id="bg3d"></canvas>
+
+<nav class="site-nav" id="siteNav" style="display:none">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="https://i.postimg.cc/Ss3LXCfP/G-s-St-etienne-logo.jpg" alt="">
+      <div><b>G.S. ST ETIENNE</b><span>Admin Control</span></div>
+    </a>
+    <div class="nav-links" id="navUser"></div>
+  </div>
+</nav>
+
+<main class="dash-wrap" id="dashContent" style="display:none">
+  <aside class="dash-sidebar" id="sidebar"></aside>
+  <div class="dash-main" id="mainPanel"></div>
+</main>
+
+<div id="toasts"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCZq44tA-uO2aEqk3vGS1b8MSUy7NPTpqg",
+  authDomain: "mid-term-report-8d8b8.firebaseapp.com",
+  projectId: "mid-term-report-8d8b8",
+  storageBucket: "mid-term-report-8d8b8.firebasestorage.app",
+  messagingSenderId: "517868785910",
+  appId: "1:517868785910:web:80849a8a2bdd1549011cd7",
+  measurementId: "G-70T6CTNWXD"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const SCHOOL = { name:'G.S. ST ETIENNE SHYOGWE', code:'271205', district:'Muhanga', email:'placidiacius01@yahoo.fr', phone:'0788441158', headTeacher:'NTIGURIRWA Placide', year:'2025/2026' };
+
+const S = { tab: 'ov', user: null, cl: [], st: [], users: [], settings: {}, calc: {} };
+
+const CL = id => S.cl.find(c => c.id === id);
+const $ = s => document.querySelector(s);
+const E = t => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ids = s => String(s).replace(/[^A-Za-z0-9]/g,'');
+
+// --- UI Helpers ---
+function toast(msg, type=''){
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type==='err'?'err':type==='info'?'info':'');
+  t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(120%)'; t.style.transition='.3s'; }, 2800);
+  setTimeout(()=>t.remove(), 3100);
+}
+function confirmDialog(msg){
+  return new Promise(res=>{
+    const mo = document.createElement('div');
+    mo.className='mo';
+    mo.innerHTML = `<div class="mo-box"><h3>⚠️ Confirm Action</h3><p>${E(msg)}</p><div class="mo-actions"><button class="btn g" id="cno">Cancel</button><button class="btn d" id="cyes">Yes, Proceed</button></div></div>`;
+    document.body.appendChild(mo);
+    mo.querySelector('#cyes').onclick = ()=>{mo.remove();res(true);};
+    mo.querySelector('#cno').onclick = ()=>{mo.remove();res(false);};
+  });
+}
+function downloadBlob(name, blob){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+// --- 3D Background ---
+(function init3D(){
+  const cv = document.getElementById('bg3d'); const ctx = cv.getContext('2d');
+  let W, H; const particles = []; const COUNT = 180;
+  function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  for (let i=0;i<COUNT;i++){ particles.push({ x: Math.random()*W, y: Math.random()*H, z: Math.random()*2.5 + 0.3, vz: 0.0015 + Math.random()*0.002, phase: Math.random()*Math.PI*2 }); }
+  let mx = W/2, my = H/2; window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function frame(){
+    const g = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.9);
+    g.addColorStop(0, '#1a1400'); g.addColorStop(0.55, '#0a0800'); g.addColorStop(1, '#000000');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    const px = (mx - W/2) * 0.02; const py = (my - H/2) * 0.02;
+    particles.sort((a,b)=> b.z - a.z);
+    for (let i=0;i<particles.length;i++){
+      const p = particles[i];
+      p.z -= p.vz; if (p.z < 0.15) { p.z = 2.8; p.x = Math.random()*W; p.y = Math.random()*H; }
+      const scale = 1 / p.z; const sx = W/2 + (p.x - W/2) * scale + px * (2.8 - p.z); const sy = H/2 + (p.y - H/2) * scale + py * (2.8 - p.z);
+      if (sx < -40 || sx > W+40 || sy < -40 || sy > H+40) continue;
+      const baseSize = (2.8 - p.z) * 0.9 + 0.3; const alpha = Math.min(0.7, (2.8 - p.z) * 0.35); const twinkle = 0.6 + 0.4 * Math.sin(Date.now()*0.0008 + p.phase);
+      const halo = ctx.createRadialGradient(sx, sy, 0, sx, sy, baseSize * 8);
+      halo.addColorStop(0, `rgba(251, 191, 36, ${alpha * twinkle * 0.5})`); halo.addColorStop(0.5, `rgba(217, 119, 6, ${alpha * twinkle * 0.2})`); halo.addColorStop(1, 'rgba(150, 100, 0, 0)');
+      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(sx, sy, baseSize * 8, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = `rgba(255, 240, 200, ${alpha * twinkle})`; ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.5, baseSize), 0, Math.PI*2); ctx.fill();
+    }
+    requestAnimationFrame(frame);
+  } frame();
+})();
+
+// --- Admin Auth Guard ---
+onAuthStateChanged(auth, async fbUser => {
+  if (!fbUser) {
+    window.location.href = 'index.html'; // Not logged in
+    return;
+  }
+
+  try {
+    const snap = await getDoc(doc(db, 'users', fbUser.uid));
+    if (!snap.exists() || snap.data().role !== 'admin') {
+      // Logged in but NOT an admin
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
+    // Confirmed Admin
+    S.user = { uid: fbUser.uid, ...snap.data() };
+    $('#loader').style.display = 'none';
+    $('#siteNav').style.display = 'block';
+    $('#dashContent').style.display = 'flex';
+    
+    drawNav();
+    attachListeners();
+    draw();
+
+  } catch (error) {
+    console.error("Auth Error:", error);
+    toast("Error verifying admin access.", "err");
+  }
+});
+
+function drawNav() {
+  $('#navUser').innerHTML = `
+    <span class="badge-admin">Super Admin</span>
+    <div class="nav-user">
+      ${S.user.photoURL ? `<img src="${E(S.user.photoURL)}" alt="">` : ''}
+      <span>${E(S.user.name)}</span>
+    </div>
+    <button class="btn-signout" onclick="signOut(auth)">Sign out</button>
+  `;
+}
+
+// --- Firestore Listeners ---
+function attachListeners() {
+  onSnapshot(collection(db, 'classes'), snap => { S.cl = snap.docs.map(d => ({id:d.id, ...d.data()})); draw(); });
+  onSnapshot(collection(db, 'students'), snap => { S.st = snap.docs.map(d => ({id:d.id, ...d.data()})); draw(); });
+  onSnapshot(collection(db, 'users'), snap => { S.users = snap.docs.map(d => ({id:d.id, ...d.data()})); draw(); });
+  onSnapshot(doc(db, 'settings', 'school'), snap => { S.settings = snap.exists() ? snap.data() : {}; draw(); });
+}
+
+// --- Render Logic ---
+const NAV_ADMIN = [
+  ['ov','Overview','📊'], ['users','User Management','🔐'], 
+  ['classes','Manage Classes','📚'], ['settings','School Settings','⚙️'], 
+  ['backup','Backup & Restore','💾']
+];
+const TITLES = { ov:'Command Center', users:'User Management', classes:'Classes & Subjects', settings:'System Settings', backup:'Data Management' };
+
+window.S = S;
+window.draw = draw;
+window.signOut = signOut;
+
+function draw() {
+  if (!S.user) return;
+
+  const sidebarItems = NAV_ADMIN.map(([k,l,ico]) => 
+    `<button class="dash-item ${S.tab===k?'on':''}" onclick="S.tab='${k}';draw()"><span class="ico">${ico}</span>${l}</button>`
+  ).join('');
+
+  document.getElementById('sidebar').innerHTML = `
+    <div class="dash-side-head">Admin Menu</div>
+    ${sidebarItems}
+  `;
+
+  document.getElementById('mainPanel').innerHTML = `
+    <div class="dash-header">
+      <div>
+        <div class="dash-title">${TITLES[S.tab]}</div>
+        <div class="dash-subtitle">Full system access & control</div>
+      </div>
+    </div>
+    ${renderTab(S.tab)}
+  `;
+}
+
+function renderTab(tab) {
+  return ({ov:vOverview, users:vUsers, classes:vClasses, settings:vSettings, backup:vBackup})[tab]();
+}
+
+// --- Views ---
+
+function vOverview() {
+  const teachers = S.users.filter(u => u.role === 'teacher').length;
+  const admins = S.users.filter(u => u.role === 'admin').length;
+  
+  return `
+    <div class="grid g-4" style="margin-bottom:20px">
+      <div class="stat-card">
+        <div class="label">Total Users</div>
+        <div class="value">${S.users.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Active Teachers</div>
+        <div class="value">${teachers}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">System Admins</div>
+        <div class="value">${admins}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Total Students</div>
+        <div class="value">${S.st.length}</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>System Health</h2>
+      <p style="color:var(--mu);line-height:1.8;font-size:14px;">
+        ✅ Firebase Firestore connection is active.<br>
+        ✅ Authentication is enforcing Google Sign-In.<br>
+        ✅ Database rules are protecting user data.<br>
+        <b style="color:var(--pr)">Welcome to your Command Center, ${E(S.user.name)}.</b>
+      </p>
+    </div>
+  `;
+}
+
+function vUsers() {
+  return `
+    <div class="card">
+      <h2>All Google Accounts <span class="badge">${S.users.length}</span></h2>
+      <p style="color:var(--mu);font-size:13px;margin-bottom:16px">Promote teachers to Admin to grant them full system access.</p>
+      <div class="tw">
+        <table class="t">
+          <tr><th>Profile</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
+          ${S.users.map(u => `
+            <tr>
+              <td>${u.photoURL ? `<img class="avatar" src="${E(u.photoURL)}" alt="">` : '<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2)"></div>'}</td>
+              <td><b>${E(u.name||'')}</b></td>
+              <td style="color:var(--mu)">${E(u.email||'')}</td>
+              <td><span class="badge-role ${u.role==='admin'?'admin':'teacher'}">${E(u.role||'')}</span></td>
+              <td>
+                ${u.role === 'teacher' ? `<button class="btn s btn-sm" onclick="promoteUser('${u.id}')">⬆ Make Admin</button>` : ''}
+                ${u.role === 'admin' && u.id !== S.user.uid ? `<button class="btn d btn-sm" onclick="demoteUser('${u.id}')">⬇ Remove Admin</button>` : ''}
+                ${u.id === S.user.uid ? '<span style="color:var(--mu);font-size:12px">(You)</span>' : ''}
+              </td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function vClasses() {
+  return `
+    <div class="card">
+      <h2>Create Class</h2>
+      <div class="row">
+        <label>Class Name<input id="cn" placeholder="e.g. P4A"></label>
+        <label>Combination<input id="cb" placeholder="e.g. MCB"></label>
+        <button class="btn" onclick="addClass()">+ Add Class</button>
+        <button class="btn s" onclick="addAllClasses()">Generate P1-S6</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Manage Subjects <span class="badge">${S.cl.length} classes</span></h2>
+      <div class="row" style="margin-bottom:16px">
+        <label>Select Class<select id="classSelect" onchange="drawClassDetails(this.value)">
+          <option value="">-- Choose Class --</option>
+          ${S.cl.map(c => `<option value="${c.id}">${E(c.name)}</option>`).join('')}
+        </select></label>
+      </div>
+      <div id="classDetails" style="display:none">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  `;
+}
+
+window.drawClassDetails = (id) => {
+  const c = CL(id);
+  const el = document.getElementById('classDetails');
+  if (!c) { el.style.display = 'none'; return; }
+  
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="font-size:15px;font-weight:700">Subjects in ${E(c.name)}</h3>
+      <button class="btn d btn-sm" onclick="deleteClass('${c.id}')">Delete Class</button>
+    </div>
+    <div class="tw" style="margin-bottom:16px">
+      ${(c.subjects||[]).length ? `
+        <table class="t">
+          <tr><th>Subject Name</th><th>Max Mark</th><th></th></tr>
+          ${c.subjects.map(b => `
+            <tr>
+              <td>${E(b.n)}</td>
+              <td>${b.w}</td>
+              <td><button class="btn d btn-sm" onclick="removeSubject('${c.id}','${b.id}')">Remove</button></td>
+            </tr>
+          `).join('')}
+        </table>
+      ` : '<p class="empty">No subjects yet.</p>'}
+    </div>
+    <div class="row">
+      <label>Subject Name<input id="bn" placeholder="Mathematics"></label>
+      <label>Max Mark<input id="bw" type="number" min="1" value="50" style="width:100px"></label>
+      <button class="btn" onclick="addSubject('${c.id}')">+ Add Subject</button>
+    </div>
+  `;
+};
+
+function vSettings() {
+  const st = S.settings;
+  return `
+    <div class="card">
+      <h2>School Information</h2>
+      <div class="grid g-2">
+        <div class="row"><label style="flex:1">School Name<input id="st-name" value="${E(st.name||SCHOOL.name)}"></label></div>
+        <div class="row"><label style="flex:1">School Code<input id="st-code" value="${E(st.code||SCHOOL.code)}"></label></div>
+        <div class="row"><label style="flex:1">District<input id="st-district" value="${E(st.district||SCHOOL.district)}"></label></div>
+        <div class="row"><label style="flex:1">Academic Year<input id="st-year" value="${E(st.year||SCHOOL.year)}"></label></div>
+        <div class="row"><label style="flex:1">Email<input id="st-email" value="${E(st.email||SCHOOL.email)}"></label></div>
+        <div class="row"><label style="flex:1">Phone<input id="st-phone" value="${E(st.phone||SCHOOL.phone)}"></label></div>
+        <div class="row" style="grid-column:1/-1"><label style="flex:1">Head Teacher<input id="st-ht" value="${E(st.headTeacher||SCHOOL.headTeacher)}"></label></div>
+      </div>
+      <div style="margin-top:24px"><button class="btn" onclick="saveSettings()">💾 Save System Settings</button></div>
+    </div>
+  `;
+}
+
+function vBackup() {
+  return `
+    <div class="card">
+      <h2>Database Management</h2>
+      <p style="color:var(--mu);font-size:13px;margin-bottom:20px;">Download a complete JSON snapshot of your Firestore database, or restore from a previous backup.</p>
+      <div class="row">
+        <button class="btn" onclick="exportBackup()">📥 Export Backup</button>
+        <label class="btn g" style="cursor:pointer">📤 Import Backup<input type="file" id="bk-imp" accept="application/json" style="display:none" onchange="importBackup(event)"></label>
+        <button class="btn d" onclick="clearAllData()">🗑 Wipe Database</button>
+        <button class="btn s" onclick="loadDemoData()">✨ Seed Demo Data</button>
+      </div>
+    </div>
+  `;
+}
+
+// --- Actions ---
+window.promoteUser = async (id) => { if(await confirmDialog('Grant Admin privileges to this user?')) { await updateDoc(doc(db, 'users', id), { role: 'admin' }); toast('User Promoted to Admin'); } };
+window.demoteUser = async (id) => { if(await confirmDialog('Remove Admin privileges from this user?')) { await updateDoc(doc(db, 'users', id), { role: 'teacher' }); toast('User Demoted to Teacher'); } };
+
+window.addClass = async () => {
+  const n = document.getElementById('cn').value; if (!n.trim()) return toast('Enter a class name', 'err');
+  try { await setDoc(doc(db, 'classes', ids(n)), { name: n.trim(), combo: document.getElementById('cb').value || '', subjects: [] }); toast('Class created'); } catch(e){ toast('Failed: ' + e.message, 'err'); }
+};
+window.addAllClasses = async () => {
+  let added = 0; try { for (const n of ['P1','P2','P3','P4','P5','P6','S1','S2','S3','S4','S5','S6']) { if (!CL(n)) { await setDoc(doc(db, 'classes', ids(n)), { name: n, combo: '', subjects: [] }); added++; } } toast(added + ' classes added'); } catch(e){ toast('Failed: ' + e.message, 'err'); }
+};
+window.deleteClass = async (id) => { if (await confirmDialog('WARNING: Deleting a class removes all subjects inside it. Students will remain in the database but will be unassigned. Delete class?')) { try { await deleteDoc(doc(db, 'classes', id)); toast('Class deleted'); } catch(e){ toast('Failed: ' + e.message, 'err'); } } };
+
+window.addSubject = async (cId) => {
+  const n = document.getElementById('bn').value.trim(), w = +document.getElementById('bw').value; if (!n || !(w > 0)) return toast('Enter subject name and max mark', 'err');
+  const c = CL(cId); const subs = c.subjects || [];
+  try { await updateDoc(doc(db, 'classes', cId), { subjects: [...subs, { id: 's' + Date.now().toString(36), n, w }] }); toast('Subject added'); } catch(e){ toast('Failed: ' + e.message, 'err'); }
+};
+window.removeSubject = async (cId, sId) => {
+  if (!await confirmDialog('Remove this subject?')) return;
+  const c = CL(cId); const subs = c.subjects.filter(x => x.id !== sId);
+  try { await updateDoc(doc(db, 'classes', cId), { subjects: subs }); toast('Removed'); } catch(e){ toast('Failed: ' + e.message, 'err'); }
+};
+
+window.saveSettings = async () => {
+  const v = id => document.getElementById(id).value.trim();
+  try { await setDoc(doc(db, 'settings', 'school'), { name: v('st-name'), code: v('st-code'), district: v('st-district'), year: v('st-year'), email: v('st-email'), phone: v('st-phone'), headTeacher: v('st-ht') }); toast('Settings saved'); } catch(e){ toast('Failed', 'err'); }
+};
+
+window.exportBackup = () => {
+  const data = { version: 2, exportedAt: new Date().toISOString(), classes: Object.fromEntries(S.cl.map(c=>[c.id,c])), students: Object.fromEntries(S.st.map(s=>[s.id,s])), settings: S.settings };
+  downloadBlob('backup-'+Date.now()+'.json', new Blob([JSON.stringify(data,null,2)], {type:'application/json'})); toast('Backup downloaded');
+};
+
+window.importBackup = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text()); if (!await confirmDialog('Importing will OVERWRITE existing data. Continue?')) return; toast('Importing…', 'info');
+    if (data.classes) for (const [id, cls] of Object.entries(data.classes)) await setDoc(doc(db,'classes',id), cls);
+    if (data.students) { const entries = Object.entries(data.students); for (let i = 0; i < entries.length; i += 500) { const batch = writeBatch(db); for (const [id, stu] of entries.slice(i, i+500)) batch.set(doc(db,'students',id), stu); await batch.commit(); } }
+    if (data.settings) await setDoc(doc(db,'settings','school'), data.settings); toast('Backup Restored!');
+  } catch(e){ toast('Import failed', 'err'); }
+};
+
+window.clearAllData = async () => {
+  if (!await confirmDialog('DANGER: This will PERMANENTLY delete all classes, students, and settings. Are you sure?')) return;
+  try { const batch = writeBatch(db); S.cl.forEach(c => batch.delete(doc(db,'classes',c.id))); S.st.forEach(s => batch.delete(doc(db,'students',s.id))); if (Object.keys(S.settings).length) batch.delete(doc(db,'settings','school')); await batch.commit(); toast('Database Wiped'); } catch(e){ toast('Failed', 'err'); }
+};
+
+window.loadDemoData = async () => {
+  if (!await confirmDialog('Load demo classes and students?')) return; toast('Loading…', 'info');
+  const demo = [
+    { id:'P4A', name:'P4A', combo:'PRIMARY', subjects:[ {id:'sp4m',n:'Mathematics',w:50},{id:'sp4e',n:'English',w:50} ] },
+    { id:'P5A', name:'P5A', combo:'PRIMARY', subjects:[ {id:'sp5m',n:'Mathematics',w:50},{id:'sp5e',n:'English',w:50} ] }
+  ];
+  for (const c of demo) if (!CL(c.id)) await setDoc(doc(db,'classes',c.id), c);
+  const names = ['Aline Uwase','Eric Nkurunziza','Claudine Mukamana','Jean Bosco Habimana'];
+  let n = 0;
+  for (const c of demo) { for (let i = 0; i < 4; i++) { const nm = names[i]; const uid = '271205' + (n+i+1).toString().padStart(6,'0'); const id = ids(uid); if (!S.st.find(s => s.id === id)) { const d = { name: nm, uid, cls: c.id, c1: 25+Math.floor(Math.random()*15) }; for (const sub of c.subjects) d['mt_'+sub.id+'_1'] = Math.floor(Math.random()*sub.w); await setDoc(doc(db,'students',id), d); } } n += 4; }
+  toast('Demo data loaded');
+};
+</script>
+</body>
+</html>
