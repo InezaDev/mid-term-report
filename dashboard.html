@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard · G.S. ST ETIENNE SHYOGWE</title>
+<link rel="icon" type="image/jpeg" href="https://i.postimg.cc/Ss3LXCfP/G-s-St-etienne-logo.jpg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root{--bg:#00080f;--sf:rgba(255,255,255,.04);--sf2:rgba(255,255,255,.07);--bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.14);--tx:#eef5fb;--mu:#8ba3bd;--pr:#00d4b8;--pr2:#00a896;--prtxt:#00151a;--gd:#f2b705;--rd:#f04e56;--gn:#22c55e;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--tx);font:15px/1.55 Inter,system-ui,Arial,sans-serif;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+canvas#bg3d{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+.loading-screen{display:grid;place-items:center;min-height:100vh;color:var(--mu);font-size:14px;position:fixed;inset:0;background:var(--bg);z-index:9999}
+.loading-screen .spin{width:40px;height:40px;border:3px solid var(--bd2);border-top-color:var(--pr);border-radius:50%;animation:spin .9s linear infinite;margin-bottom:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.site-nav{position:sticky;top:0;z-index:50;background:rgba(0,10,20,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);padding:0 20px}
+.nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:18px;height:64px}
+.nav-brand{display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:0;color:inherit;padding:0}
+.nav-brand img{width:38px;height:38px;border-radius:9px;background:#fff;object-fit:cover}
+.nav-brand b{display:block;font-size:13.5px;font-weight:700}
+.nav-brand span{display:block;font-size:10.5px;color:var(--pr);font-weight:600}
+.nav-links{display:flex;align-items:center;gap:12px;margin-left:auto}
+.nav-link{color:var(--mu);text-decoration:none;font-size:14px;font-weight:600;transition:.15s}
+.nav-link:hover{color:var(--tx)}
+.nav-user{display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;background:var(--sf);border:1px solid var(--bd);border-radius:40px}
+.nav-user img{width:28px;height:28px;border-radius:50%;object-fit:cover}
+.nav-user span{font-size:13px;font-weight:600}
+.btn-signout{background:none;border:1px solid var(--bd2);color:var(--mu);padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-signout:hover{color:var(--rd);border-color:var(--rd)}
+
+.dash-wrap{display:flex;gap:20px;padding:20px;max-width:1400px;margin:0 auto;width:100%;min-height:calc(100vh - 64px)}
+.dash-sidebar{width:240px;flex-shrink:0;background:rgba(0,15,28,.85);backdrop-filter:blur(24px);border:1px solid var(--bd);border-radius:16px;padding:16px 12px;position:sticky;top:80px;height:calc(100vh - 100px);overflow-y:auto}
+.dash-side-head{font-size:10.5px;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;font-weight:700;padding:0 8px;margin:12px 0 8px}
+.dash-side-head:first-child{margin-top:0}
+.dash-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;cursor:pointer;color:var(--mu);font-size:13.5px;font-weight:500;transition:.15s;background:none;border:0;width:100%;text-align:left;font-family:inherit}
+.dash-item:hover{background:var(--sf);color:var(--tx)}
+.dash-item.on{background:linear-gradient(135deg,rgba(0,212,184,.15),rgba(0,168,150,.05));color:var(--pr);box-shadow:inset 0 0 0 1px rgba(0,212,184,.25)}
+.dash-item .ico{font-size:15px;width:18px;text-align:center}
+.dash-main{flex:1;min-width:0}
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap}
+.dash-title{font-size:24px;font-weight:800;letter-spacing:-.6px;color:#fff}
+.dash-filters{display:flex;gap:10px;flex-wrap:wrap}
+.dash-filters select{padding:8px 14px;font-size:13px;background:rgba(0,15,28,.85);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-family:inherit}
+
+.card{background:rgba(0,20,35,.6);backdrop-filter:blur(20px);border:1px solid var(--bd);border-radius:16px;padding:24px;margin-bottom:16px}
+.card h2{font-size:16px;font-weight:700;color:var(--tx);margin:0 0 16px;display:flex;align-items:center;gap:8px}
+.card h2 .badge{font-size:10.5px;background:var(--sf2);color:var(--pr);padding:2px 8px;border-radius:20px;border:1px solid rgba(0,212,184,.3);font-weight:600}
+.grid{display:grid;gap:16px}
+.g-4{grid-template-columns:repeat(4,1fr)}
+.g-2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:1100px){.g-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.g-4,.g-2{grid-template-columns:1fr}}
+.stat-card{background:rgba(0,20,35,.6);backdrop-filter:blur(20px);border:1px solid var(--bd);border-radius:16px;padding:20px 24px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,212,184,.06),transparent 60%);pointer-events:none}
+.stat-card .label{font-size:12px;color:var(--mu);font-weight:500;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+.stat-card .value{font-size:32px;font-weight:800;letter-spacing:-1.2px;line-height:1;background:linear-gradient(135deg,#fff,#7de8d6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat-card .unit{font-size:15px;color:var(--mu);font-weight:500;margin-left:2px}
+
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.row label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--mu);font-weight:500}
+input,select,textarea{background:rgba(0,15,28,.85);border:1px solid var(--bd2);border-radius:10px;padding:10px 14px;color:var(--tx);font-size:14px;transition:.15s;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pr);box-shadow:0 0 0 3px rgba(0,212,184,.15)}
+.btn{background:linear-gradient(135deg,var(--pr),var(--pr2));color:var(--prtxt);border:0;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px;justify-content:center;font-family:inherit}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,212,184,.25)}
+.btn.s{background:transparent;color:var(--pr);border:1px solid rgba(0,212,184,.4)}
+.btn.d{background:rgba(240,78,86,.15);color:var(--rd);border:1px solid rgba(240,78,86,.3)}
+.btn-sm{padding:7px 14px;font-size:12.5px;border-radius:8px}
+
+.tw{overflow-x:auto;border-radius:12px;border:1px solid var(--bd)}
+table.t{border-collapse:collapse;width:100%;font-size:13.5px}
+table.t th{background:rgba(0,15,28,.6);color:var(--pr);font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;padding:12px 14px;text-align:left;border-bottom:1px solid var(--bd2)}
+table.t td{padding:12px 14px;border-bottom:1px solid var(--bd);color:var(--tx)}
+table.t input.m{padding:6px 10px;font-size:13px;width:90px;background:rgba(0,15,28,.9)}
+.empty{color:var(--mu);text-align:center;padding:40px 20px;font-size:14px}
+.empty b{color:var(--tx)}
+.search{display:flex;gap:10px;margin-bottom:16px;align-items:center}
+.search input{flex:1}
+
+.bar-row{display:grid;grid-template-columns:120px 1fr 60px;gap:12px;align-items:center;font-size:13.5px;padding:8px 0}
+.bar-track{background:rgba(255,255,255,.06);height:8px;border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--pr),#5ce8d5);border-radius:4px}
+.bar-val{text-align:right;color:var(--mu);font-weight:600;font-size:13px}
+
+.pv{overflow-x:auto;background:#5d6b82;padding:16px;border-radius:12px}
+.rp{width:794px;min-height:1120px;background:#fff;color:#000;font:11px Arial,Helvetica,sans-serif;padding:24px;margin:0 auto;box-sizing:border-box}
+.rp table{border-collapse:collapse;width:100%}
+.rp td,.rp th{border:1px solid #000;padding:3px 2px;text-align:center;font-size:10px}
+.rp td.l{text-align:left;padding-left:4px}
+.rp .r{color:#e00}
+.rp .hd{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.rp .hd div.ad{font-size:10px;line-height:1.35;width:230px}
+.rp .bx{border:1px solid #000;padding:10px 28px;font-weight:700;font-size:14px;text-align:center;margin-top:6px}
+.rp .nm{border:2px solid #000;padding:8px;display:flex;justify-content:space-between;font-size:11px;margin-bottom:10px}
+.rp .gs{background:#bbb;text-align:left}
+.rp .sec{display:flex;gap:10px;margin-top:10px}
+.rp .bd{border:2px solid #000;padding:8px;font-size:10px;flex:1;display:flex;justify-content:space-between;gap:10px}
+.rp img{border-radius:4px;object-fit:cover}
+
+#toasts{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:linear-gradient(135deg,rgba(0,212,184,.95),rgba(0,168,150,.95));color:#00151a;padding:14px 20px;border-radius:12px;font-weight:700;font-size:13.5px;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:slideIn .3s;pointer-events:auto}
+.toast.err{background:linear-gradient(135deg,rgba(240,78,86,.95),rgba(200,40,50,.95));color:#fff}
+.toast.info{background:rgba(0,20,35,.98);color:var(--tx);border:1px solid var(--bd2)}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:9998;display:grid;place-items:center;padding:16px}
+.mo-box{background:rgba(0,20,35,.98);border:1px solid var(--bd2);border-radius:20px;padding:32px;max-width:420px;width:100%}
+.mo-box h3{font-size:18px;font-weight:700;margin-bottom:12px;color:#fff}
+.mo-box p{color:var(--mu);font-size:14px;line-height:1.65;margin-bottom:24px}
+.mo-actions{display:flex;gap:12px;justify-content:flex-end}
+
+@media print{
+  body{background:#fff}
+  canvas#bg3d,.site-nav,.dash-sidebar,.dash-header,.btn,.row,.mo,#toasts{display:none!important}
+  .dash-wrap{padding:0;min-height:auto}
+  .card,.pv{background:#fff;border:0;padding:0;margin:0;box-shadow:none}
+  .rp{margin:0;padding:14mm;width:auto;min-height:auto;page-break-after:always;border:none}
+}
+@media(max-width:900px){
+  .dash-wrap{flex-direction:column;padding:12px}
+  .dash-sidebar{width:100%;position:static;height:auto;display:flex;overflow-x:auto;gap:8px;padding:12px}
+  .dash-side-head{display:none}
+  .dash-item{white-space:nowrap;width:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loader">
+  <div class="spin"></div>
+  <div>Loading your dashboard…</div>
+</div>
+
+<canvas id="bg3d"></canvas>
+
+<nav class="site-nav" id="siteNav" style="display:none">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <img src="https://i.postimg.cc/Ss3LXCfP/G-s-St-etienne-logo.jpg" alt="">
+      <div><b>G.S. ST ETIENNE</b><span>Dashboard</span></div>
+    </div>
+    <div class="nav-links" id="navUser"></div>
+  </div>
+</nav>
+
+<main class="dash-wrap" id="dashContent" style="display:none">
+  <aside class="dash-sidebar" id="sidebar"></aside>
+  <div class="dash-main" id="mainPanel"></div>
+</main>
+
+<div id="toasts"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCZq44tA-uO2aEqk3vGS1b8MSUy7NPTpqg",
+  authDomain: "mid-term-report-8d8b8.firebaseapp.com",
+  projectId: "mid-term-report-8d8b8",
+  storageBucket: "mid-term-report-8d8b8.firebasestorage.app",
+  messagingSenderId: "517868785910",
+  appId: "1:517868785910:web:80849a8a2bdd1549011cd7",
+  measurementId: "G-70T6CTNWXD"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const SCHOOL = { name:'G.S. ST ETIENNE SHYOGWE', code:'271205', district:'Muhanga', email:'placidiacius01@yahoo.fr', phone:'0788441158', headTeacher:'NTIGURIRWA Placide', year:'2025/2026' };
+const LOGO = 'https://i.postimg.cc/Ss3LXCfP/G-s-St-etienne-logo.jpg';
+
+const S = { tab: 'ov', user: null, isAdmin: false, term: 1, cur: null, sel: null, sub: null, cl: [], st: [], users: [], settings: {}, calc: {}, ranks: {} };
+
+const CL = id => S.cl.find(c => c.id === id);
+const CUR = () => CL(S.cur);
+const SB = () => CUR()?.subjects || [];
+const MS = () => S.st.filter(s => s.cls === S.cur);
+const lvl = c => /^S/i.test(c?.name || '') ? 'SECONDARY' : 'PRIMARY';
+const ord = n => { const m = /^([PS])(\d+)/i.exec(n); return m ? (m[1].toUpperCase()==='P'?0:10)+ +m[2] : 99; };
+const cmp = (a,b) => ord(a.name)-ord(b.name) || a.name.localeCompare(b.name);
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const E = t => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ids = s => String(s).replace(/[^A-Za-z0-9]/g,'');
+const F = n => String(Math.round(n*10)/10);
+const G = p => p>=80?'A':p>=75?'B':p>=70?'C':p>=65?'D':p>=60?'E':p>=50?'S':'F';
+const TC = p => p>=80?'Excellent':p>=75?'Very good':p>=70?'Good':p>=65?'Satisfactory':p>=60?'Adequate':p>=50?'Minimum Pass':'Fail';
+
+function toast(msg, type=''){
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type==='err'?'err':type==='info'?'info':'');
+  t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(120%)'; t.style.transition='.3s'; }, 2800);
+  setTimeout(()=>t.remove(), 3100);
+}
+function confirmDialog(msg){
+  return new Promise(res=>{
+    const mo = document.createElement('div');
+    mo.className='mo';
+    mo.innerHTML = `<div class="mo-box"><h3>Confirm</h3><p>${E(msg)}</p><div class="mo-actions"><button class="btn g" id="cno">Cancel</button><button class="btn d" id="cyes">Confirm</button></div></div>`;
+    document.body.appendChild(mo);
+    mo.querySelector('#cyes').onclick = ()=>{mo.remove();res(true);};
+    mo.querySelector('#cno').onclick = ()=>{mo.remove();res(false);};
+  });
+}
+function downloadBlob(name, blob){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+// --- 3D Background ---
+(function init3D(){
+  const cv = document.getElementById('bg3d'); const ctx = cv.getContext('2d');
+  let W, H; const particles = []; const COUNT = 160;
+  function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  for (let i=0;i<COUNT;i++){ particles.push({ x: Math.random()*W, y: Math.random()*H, z: Math.random()*2.5 + 0.3, vz: 0.0015 + Math.random()*0.002, phase: Math.random()*Math.PI*2 }); }
+  let mx = W/2, my = H/2; window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function frame(){
+    const g = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.9);
+    g.addColorStop(0, '#001a2e'); g.addColorStop(0.55, '#000d1a'); g.addColorStop(1, '#00060d');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    const px = (mx - W/2) * 0.02; const py = (my - H/2) * 0.02;
+    particles.sort((a,b)=> b.z - a.z);
+    for (let i=0;i<particles.length;i++){
+      const p = particles[i];
+      p.z -= p.vz; if (p.z < 0.15) { p.z = 2.8; p.x = Math.random()*W; p.y = Math.random()*H; }
+      const scale = 1 / p.z; const sx = W/2 + (p.x - W/2) * scale + px * (2.8 - p.z); const sy = H/2 + (p.y - H/2) * scale + py * (2.8 - p.z);
+      if (sx < -40 || sx > W+40 || sy < -40 || sy > H+40) continue;
+      const baseSize = (2.8 - p.z) * 0.9 + 0.3; const alpha = Math.min(0.7, (2.8 - p.z) * 0.35); const twinkle = 0.6 + 0.4 * Math.sin(Date.now()*0.0008 + p.phase);
+      const halo = ctx.createRadialGradient(sx, sy, 0, sx, sy, baseSize * 8);
+      halo.addColorStop(0, `rgba(0, 230, 200, ${alpha * twinkle * 0.4})`); halo.addColorStop(0.5, `rgba(0, 180, 220, ${alpha * twinkle * 0.15})`); halo.addColorStop(1, 'rgba(0, 150, 200, 0)');
+      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(sx, sy, baseSize * 8, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = `rgba(200, 255, 245, ${alpha * twinkle})`; ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.5, baseSize), 0, Math.PI*2); ctx.fill();
+    }
+    requestAnimationFrame(frame);
+  } frame();
+})();
+
+// --- Auth & Firestore Logic ---
+async function ensureProfile(fbUser){
+  try {
+    const ref = doc(db, 'users', fbUser.uid);
+    const snap = await getDoc(ref);
+    if (snap.exists()) return snap.data();
+    
+    const profile = { email: fbUser.email, name: fbUser.displayName || fbUser.email, photoURL: fbUser.photoURL || '', role: 'teacher', createdAt: new Date().toISOString() };
+    await setDoc(ref, profile);
+    return profile;
+  } catch (e) {
+    console.warn("Firestore profile error (using fallback):", e);
+    return { email: fbUser.email, name: fbUser.displayName || fbUser.email, photoURL: fbUser.photoURL || '', role: 'teacher' };
+  }
+}
+
+let userDocUnsub = null, usersColUnsub = null;
+function attachUsersIfAdmin(){
+  if (!S.isAdmin){ if (usersColUnsub){ usersColUnsub(); usersColUnsub = null; } S.users = []; return; }
+  if (usersColUnsub) return;
+  usersColUnsub = onSnapshot(collection(db, 'users'), snap => { S.users = snap.docs.map(d => ({id:d.id, ...d.data()})); draw(); }, err => console.warn('users:', err.code));
+}
+
+let listenersAttached = false;
+function attachListeners(){
+  if (listenersAttached) return; listenersAttached = true;
+  onSnapshot(collection(db, 'classes'), snap => { S.cl = snap.docs.map(d => ({id:d.id, ...d.data()})); recalc(); draw(); }, err => console.warn('classes:', err.code));
+  onSnapshot(collection(db, 'students'), snap => { S.st = snap.docs.map(d => ({id:d.id, ...d.data()})); recalc(); draw(); }, err => console.warn('students:', err.code));
+  onSnapshot(doc(db, 'settings', 'school'), snap => { S.settings = snap.exists() ? snap.data() : {}; draw(); }, err => console.warn('settings:', err.code));
+}
+
+onAuthStateChanged(auth, async fbUser => {
+  if (!fbUser) {
+    // If not logged in, kick back to homepage
+    window.location.href = 'index.html';
+    return;
+  }
+
+  // Render immediately with basic info so we don't wait for Firestore
+  S.user = { uid: fbUser.uid, email: fbUser.email, name: fbUser.displayName || fbUser.email, photoURL: fbUser.photoURL || '', role: 'teacher' };
+  $('#loader').style.display = 'none';
+  $('#siteNav').style.display = 'block';
+  $('#dashContent').style.display = 'flex';
+  drawNav();
+  draw();
+
+  attachListeners();
+
+  // Fetch profile asynchronously
+  try {
+    const profile = await ensureProfile(fbUser);
+    S.user.role = profile.role || 'teacher';
+    S.user.name = profile.name || S.user.name;
+    S.user.photoURL = profile.photoURL || S.user.photoURL;
+    S.isAdmin = S.user.role === 'admin';
+    
+    drawNav();
+    draw();
+    attachUsersIfAdmin();
+
+    if(userDocUnsub) userDocUnsub();
+    userDocUnsub = onSnapshot(doc(db, 'users', fbUser.uid), snap => {
+      if (!snap.exists()) return;
+      const d = snap.data();
+      S.user.role = d.role || 'teacher'; S.user.name = d.name || S.user.name; S.user.photoURL = d.photoURL || S.user.photoURL;
+      S.isAdmin = S.user.role === 'admin'; attachUsersIfAdmin(); drawNav(); draw();
+    }, err => console.warn('user doc:', err.code));
+  } catch(e) { console.error(e); }
+});
+
+// --- Calculations & Report ---
+function calc(s){
+  const sb = CL(s.cls)?.subjects || []; const k = S.term; const mx = sb.reduce((a,b)=>a+b.w,0) || 1;
+  let has = false, tot = 0;
+  const r = sb.map(b => { const v = s['mt_'+b.id+'_'+k]; const a = (v==null||v==='') ? null : +v; if (a != null) has = true; tot += a || 0; return { a, p: (a||0)/b.w*100 }; });
+  return { sb, r, tot, mx, has, p: tot/mx*100 };
+}
+function recalc(){
+  S.calc = {}; S.ranks = {};
+  S.st.forEach(s => S.calc[s.id] = calc(s));
+  S.cl.forEach(cl => {
+    const L = S.st.filter(s => s.cls === cl.id && S.calc[s.id].has);
+    L.forEach(s => { S.ranks[s.id] = (1 + L.filter(o => S.calc[o.id].p > S.calc[s.id].p).length) + ' out of ' + L.length; });
+  });
+}
+function report(s){
+  const c = S.calc[s.id], cl = CL(s.cls), lv = lvl(cl), k = S.term; const cv = s['c'+k]; const cd = (cv==null||cv==='') ? '-' : cv; const rd = p => p<50 ? 'r' : ''; const st = S.settings;
+  const rows = c.sb.map((b,i)=>{ const x = c.r[i], h = x.a != null; return `<tr><td class="l">${E(b.n)}</td><td><b>${b.w}</b></td><td>${h?x.a:'-'}</td><td class="${h?rd(x.p):''}">${h?F(x.p)+'%':'-'}</td><td>${h?G(x.p):'-'}</td></tr>`; }).join('') || '<tr><td colspan="5">No subjects registered for this class yet.</td></tr>';
+  return `<div class="rp"><div class="hd"><div class="ad">REPUBLIC OF RWANDA<br>MINISTRY OF EDUCATION<br>DISTRICT : ${E(st.district||SCHOOL.district)}<br>School: ${E(st.name||SCHOOL.name)}<br>School Code: ${E(st.code||SCHOOL.code)}<br>E-mail: ${E(st.email||SCHOOL.email)}<br>Phone: ${E(st.phone||SCHOOL.phone)}</div><div class="bx">STUDENT REPORT CARD:<br>MID-TERM ${lv}</div><img src="${LOGO}" width="84" height="84" alt="logo"></div>
+  <div class="nm"><div><b>Names:</b> ${E(s.name)}<br><b>Student Unique Identifier:</b> ${E(s.uid)}</div><div style="text-align:right"><b>Academic Year:</b> ${E(st.year||SCHOOL.year)}<br><b>Term:</b> ${k}<br><b>Level:</b> ${lv}<br><b>Class:</b> ${E(cl?.name||'')}<br><b>Combination:</b> ${E(cl?.combo||lv)}</div></div>
+  <table class="mt"><tr><th style="text-align:left">SUBJECT</th><th>MAXIMUM</th><th>MARKS</th><th>%</th><th>GR</th></tr><tr><td class="l"><b>Conduct</b></td><td><b>40</b></td><td><b>${cd}</b></td><td colspan="2"></td></tr><tr><td colspan="5" class="gs">All Subjects</td></tr>${rows}
+  <tr><td class="l"><b>Total</b></td><td><b>${c.mx}</b></td><td><b>${c.tot}</b></td><td class="${c.has?rd(c.p):''}"><b>${F(c.p)}%</b></td><td><b>${c.has?G(c.p):'-'}</b></td></tr>
+  <tr><td class="l"><b>Percentage</b></td><td colspan="4">${F(c.p)}%</td></tr><tr><td class="l"><b>Position</b></td><td colspan="4">${S.ranks[s.id]||'-'}</td></tr>
+  <tr style="height:56px"><td class="l">Comment</td><td colspan="4">${c.has?TC(c.p):''}</td></tr><tr style="height:34px"><td class="l">Class teacher's Signature</td><td colspan="4"></td></tr><tr style="height:34px"><td class="l">Parent's Signature</td><td colspan="4"></td></tr></table>
+  <div class="sec"><table style="width:70%"><tr><td rowspan="2" class="l">Grading scale</td><td class="l">Final Grade</td><td>100-80</td><td>79-75</td><td>74-70</td><td>69-65</td><td>64-60</td><td>59-50</td><td>49-0</td></tr><tr><td class="l">Letter Grade</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>S</td><td>F</td></tr></table></div>
+  <div class="sec"><div class="bd"><div><b>Abbreviations</b><br><b>GR:</b> Letter grade<br><b>TOT:</b> Total<br><b>MAX:</b> Maximum</div><div><b>HEADTEACHER</b><br>${E(st.headTeacher||SCHOOL.headTeacher)}</div><div style="align-self:flex-start">Signature and Stamp</div></div></div></div>`;
+}
+
+// --- Render Logic ---
+const NAV_ADMIN = [ ['ov','Overview','📊'],['cs','Classes & subjects','📚'],['students','Students','👥'],['marks','Marks entry','✏️'],['reports','Report cards','📄'],['users','Users','🔐'],['settings','Settings','⚙️'],['backup','Backup','💾'] ];
+const NAV_TEACHER = [ ['students','Students','👥'],['marks','Marks entry','✏️'],['reports','Report cards','📄'] ];
+const TITLES = { ov:'Overview', cs:'Classes & subjects', students:'Students', marks:'Marks entry', reports:'Report cards', users:'Users', settings:'Settings', backup:'Backup' };
+
+function drawNav(){
+  const userEl = document.getElementById('navUser');
+  if (!userEl) return;
+  userEl.innerHTML = `
+    <div class="nav-user">
+      ${S.user.photoURL ? `<img src="${E(S.user.photoURL)}" alt="">` : ''}
+      <span>${E(S.user.name)}</span>
+    </div>
+    <button class="btn-signout" id="btnLogout">Sign out</button>
+  `;
+  document.getElementById('btnLogout').onclick = () => signOut(auth);
+}
+
+function draw(){
+  if (!S.user) return;
+  if (!S.cl.find(c => c.id === S.cur)) S.cur = S.cl.slice().sort(cmp)[0]?.id || null;
+  const tabs = S.isAdmin ? NAV_ADMIN : NAV_TEACHER;
+  if (!tabs.find(t => t[0] === S.tab)) S.tab = tabs[0][0];
+  const showClassTerm = ['students','marks','reports'].includes(S.tab) && CUR();
+
+  const sidebarItems = tabs.map(([k,l,ico]) => `<button class="dash-item ${S.tab===k?'on':''}" onclick="S.tab='${k}';draw()"><span class="ico">${ico}</span>${l}</button>`).join('');
+  
+  document.getElementById('sidebar').innerHTML = `
+    <div class="dash-side-head">Menu</div>
+    ${sidebarItems}
+    <div class="dash-side-head" style="margin-top:20px">Session</div>
+    <div class="dash-item" style="cursor:default">
+      ${S.user.photoURL ? `<img src="${E(S.user.photoURL)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover">` : '👤'}
+      <span>${E(S.user.name)}</span>
+    </div>
+    <button class="dash-item" onclick="signOut(auth)"><span class="ico">⏻</span>Sign out</button>
+  `;
+
+  const mainPanel = document.getElementById('mainPanel');
+  mainPanel.innerHTML = `
+    <div class="dash-header">
+      <div>
+        <div class="dash-title">${TITLES[S.tab]}</div>
+        <div style="color:var(--mu);font-size:12px;margin-top:2px">Signed in as <b style="color:var(--pr)">${S.user.role}</b> · ${E(S.user.email)}</div>
+      </div>
+      ${showClassTerm ? `<div class="dash-filters">
+        <select onchange="S.cur=this.value;S.sel=S.sub=null;draw()">${S.cl.slice().sort(cmp).map(c => `<option value="${c.id}" ${c.id===S.cur?'selected':''}>${E(c.name)}</option>`).join('')}</select>
+        <select onchange="S.term=+this.value;recalc();draw()">${[1,2,3].map(n => `<option value="${n}" ${n===S.term?'selected':''}>Term ${n}</option>`).join('')}</select>
+      </div>` : ''}
+    </div>
+    ${renderDashTab(S.tab)}
+  `;
+}
+
+window.S = S;
+window.recalc = recalc;
+window.draw = draw;
+window.signOut = signOut;
+
+function renderDashTab(tab){
+  if (!CUR() && ['students','marks','reports'].includes(tab)) return `<div class="card"><div class="empty"><b>No class available</b><br>${S.isAdmin ? 'Create a class first under Classes & subjects.' : 'The admin has not created any classes yet.'}</div></div>`;
+  return ({ov:vOverview, cs:vClasses, students:vStudents, marks:vMarks, reports:vReports, users:vUsers, settings:vSettings, backup:vBackup})[tab]();
+}
+
+function vOverview(){
+  const L = S.st.filter(s => S.calc[s.id].has); const av = L.length ? L.reduce((a,s)=>a+S.calc[s.id].p,0)/L.length : 0; const lo = L.filter(s => S.calc[s.id].p < 50).length;
+  const rows = S.cl.slice().sort(cmp).map(c => { const M = S.st.filter(s => s.cls === c.id && S.calc[s.id].has); return { name: c.name, avg: M.length ? M.reduce((a,s)=>a+S.calc[s.id].p,0)/M.length : 0 }; });
+  return `<div class="grid g-4" style="margin-bottom:16px">
+      <div class="stat-card"><div class="label">Classes</div><div class="value">${S.cl.length}</div></div>
+      <div class="stat-card"><div class="label">Students</div><div class="value">${S.st.length}</div></div>
+      <div class="stat-card"><div class="label">School Average</div><div class="value">${F(av)}<span class="unit">%</span></div><div class="foot">${L.length} with marks</div></div>
+      <div class="stat-card"><div class="label">Below 50%</div><div class="value">${lo}</div><div class="foot">${L.length-lo} above pass</div></div>
+    </div>
+    <div class="card"><h2>Average by class <span class="badge">Term ${S.term}</span></h2>
+      ${rows.length ? rows.map(r => `<div class="bar-row"><span>${E(r.name)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,r.avg)}%"></div></div><span class="bar-val">${r.avg ? F(r.avg)+'%' : '—'}</span></div>`).join('') : '<div class="empty">No classes yet.</div>'}
+    </div>`;
+}
+
+function vClasses(){
+  const cs = S.cl.slice().sort(cmp), c = CUR();
+  return `<div class="card"><h2>Add class</h2><div class="row">
+      <label>Class name<input id="cn" placeholder="e.g. P4A"></label>
+      <label>Combination<input id="cb" placeholder="e.g. MCB"></label>
+      <button class="btn" onclick="addClass()">+ Add class</button>
+      <button class="btn s" onclick="addAllClasses()">Add P1–P6 &amp; S1–S6</button>
+    </div></div>
+    <div class="card"><h2>Manage subjects <span class="badge">${c ? E(c.name) : 'No class'}</span></h2>
+      ${cs.length ? `<div class="row" style="margin-bottom:14px"><label>Class<select onchange="S.cur=this.value;draw()">${cs.map(x=>`<option value="${x.id}" ${x.id===S.cur?'selected':''}>${E(x.name)}</option>`).join('')}</select></label>${c ? `<button class="btn d" onclick="deleteClass('${c.id}')">Delete class</button>` : ''}</div>` : '<div class="empty">No classes yet. Add one above.</div>'}
+      ${c ? (c.subjects||[]).length ? `<div class="tw"><table class="t"><tr><th>Subject name</th><th>Max mark</th><th></th></tr>
+          ${c.subjects.map(b => `<tr><td><input class="sn" data-s="${b.id}" value="${E(b.n)}" style="width:100%;max-width:320px" onchange="updateSubject('${c.id}','${b.id}',this.value,${b.w})"></td><td><input class="sw" type="number" min="1" data-s="${b.id}" value="${b.w}" style="width:90px" onchange="updateSubject('${c.id}','${b.id}','${E(b.n)}',this.value)"></td><td><button class="btn-sm btn d" onclick="removeSubject('${c.id}','${b.id}')">Remove</button></td></tr>`).join('')}
+        </table></div>` : '<div class="empty">No subjects yet.</div>' : ''}
+      ${c ? `<div class="row" style="margin-top:14px"><label>New subject<input id="bn" placeholder="Mathematics"></label><label>Max<input id="bw" type="number" min="1" value="50" style="width:90px"></label><button class="btn" onclick="addSubject('${c.id}')">+ Add subject</button></div>` : ''}
+    </div>`;
+}
+
+function vStudents(){
+  const all = MS().slice().sort((a,b)=>a.name.localeCompare(b.name)); const q = S.search.toLowerCase(); const M = q ? all.filter(s => s.name.toLowerCase().includes(q) || s.uid.toLowerCase().includes(q)) : all;
+  return `<div class="card"><h2>Register student</h2><div class="row"><label>Full name<input id="sn" placeholder="Alice Uwase"></label><label>Student ID<input id="si" placeholder="271205230033"></label><button class="btn" onclick="addStudent()">+ Register</button></div>
+      <details style="margin-top:12px"><summary style="cursor:pointer;color:var(--pr);font-weight:600;font-size:13px">📋 Register multiple students</summary><p style="color:var(--mu);font-size:12px;margin:10px 0 6px">One per line: <code>Full name, Student ID</code></p><textarea id="bulk" rows="5" style="width:100%"></textarea><button class="btn s" style="margin-top:8px" onclick="bulkAddStudents()">Register all</button></details></div>
+    <div class="card"><h2>Students <span class="badge">${E(CUR()?.name||'')}</span></h2><div class="search"><input id="srch" placeholder="🔍 Search by name or ID…" value="${E(S.search)}" oninput="S.search=this.value;draw()"><button class="btn s btn-sm" onclick="S.search='';draw()">Clear</button><span class="count">${M.length} / ${all.length}</span></div>
+      ${M.length ? `<div class="tw"><table class="t"><tr><th>Name</th><th>Student ID</th><th>Conduct (T${S.term}/40)</th>${S.isAdmin?'<th>Class</th><th></th>':''}</tr>
+        ${M.map(s => `<tr><td><b>${E(s.name)}</b></td><td style="color:var(--mu);font-family:monospace">${E(s.uid)}</td><td><input class="m cd" type="number" min="0" max="40" data-id="${s.id}" data-k="c${S.term}" value="${s['c'+S.term] ?? ''}" onchange="updateConduct('${s.id}',this.value)"></td>${S.isAdmin ? `<td><select class="mv" data-id="${s.id}" onchange="moveClass('${s.id}',this.value)">${S.cl.slice().sort(cmp).map(c => `<option value="${c.id}" ${c.id===s.cls?'selected':''}>${E(c.name)}</option>`).join('')}</select></td><td><button class="btn d btn-sm" onclick="deleteStudent('${s.id}')">Delete</button></td>` : ''}</tr>`).join('')}
+      </table></div>` : '<div class="empty">No students in this class yet.</div>'}</div>`;
+}
+
+function vMarks(){
+  const sb = SB(); if (!sb.length) return `<div class="card"><div class="empty"><b>No subjects</b><br>${S.isAdmin ? 'Add subjects under Classes & subjects.' : 'Admin has not set up subjects.'}</div></div>`;
+  if (!sb.find(b => b.id === S.sub)) S.sub = sb[0].id; const b = sb.find(x => x.id === S.sub), w = b.w; const M = MS().slice().sort((a,c)=>a.name.localeCompare(c.name));
+  return `<div class="card"><h2>Subject <span class="badge">Max ${w}</span></h2><div class="row"><label>Subject<select onchange="S.sub=this.value;draw()">${sb.map(x => `<option value="${x.id}" ${x.id===S.sub?'selected':''}>${E(x.n)}</option>`).join('')}</select></label></div><p style="color:var(--mu);font-size:12.5px;margin-top:12px">Enter each student's Term ${S.term} mark out of ${w}. Saves automatically.</p></div>
+    <div class="card"><h2>Marks <span class="badge">${M.length} students</span></h2>
+      ${M.length ? `<div class="tw"><table class="t"><tr><th>Student</th><th>Mark /${w}</th><th>Percentage</th></tr>${M.map(s => { const v = s[`mt_${b.id}_${S.term}`]; return `<tr><td>${E(s.name)}</td><td><input class="m mi" type="number" min="0" max="${w}" data-id="${s.id}" value="${v??''}" onchange="updateMark('${s.id}',this.value,${w})"></td><td>${v==null||v===''?'—':`<b style="color:${(+v/w*100)>=50?'var(--gn)':'var(--rd)'}">${F(+v/w*100)}%</b>`}</td></tr>`; }).join('')}</table></div>` : '<div class="empty">No students in this class yet.</div>'}</div>`;
+}
+
+function vReports(){
+  const M = MS().slice().sort((a,b)=>a.name.localeCompare(b.name)); if (!S.sel || !M.find(s => s.id === S.sel)) S.sel = M[0]?.id; const s = M.find(x => x.id === S.sel);
+  return `<div class="card"><h2>Export report cards</h2><div class="row"><label>Student<select onchange="S.sel=this.value;draw()">${M.map(x => `<option value="${x.id}" ${x.id===S.sel?'selected':''}>${E(x.name)}</option>`).join('')}</select></label><button class="btn" onclick="downloadPDF('${s?.id}')" ${s?'':'disabled'}>⬇ PDF</button><button class="btn s" onclick="downloadClassPDF()" ${s?'':'disabled'}>⬇ Whole class</button><button class="btn g" onclick="window.print()" ${s?'':'disabled'}>🖨 Print</button></div></div>
+    ${s ? `<div class="pv"><div id="one">${report(s)}</div></div>` : '<div class="empty">No students in this class yet.</div>'}<div id="all" style="position:fixed;left:-9999px;top:0"></div>`;
+}
+
+function vUsers(){
+  if (!S.isAdmin) return `<div class="card"><div class="empty">Only admins can manage users.</div></div>`;
+  return `<div class="card"><h2>Google accounts <span class="badge">${S.users.length}</span></h2><p style="color:var(--mu);font-size:12.5px;margin-bottom:14px">Promote teachers to admin to grant full access.</p>
+      ${S.users.length ? `<div class="tw"><table class="t"><tr><th></th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>${S.users.map(u => `<tr><td>${u.photoURL ? `<img class="avatar" src="${E(u.photoURL)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">` : '<div style="width:28px;height:28px;border-radius:50%;background:var(--sf2)"></div>'}</td><td><b>${E(u.name||'')}</b></td><td style="color:var(--mu)">${E(u.email||'')}</td><td><span class="badge-role ${u.role==='admin'?'admin':'teacher'}" style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;background:${u.role==='admin'?'rgba(242,183,5,.15)':'rgba(0,212,184,.12)'};color:${u.role==='admin'?'var(--gd)':'var(--pr)'};border:1px solid ${u.role==='admin'?'rgba(242,183,5,.3)':'rgba(0,212,184,.3)'}">${E(u.role||'')}</span></td><td>${u.role === 'teacher' ? `<button class="btn s btn-sm" onclick="promoteUser('${u.id}')">⬆ Promote</button>` : ''}${u.role === 'admin' && u.id !== S.user.uid ? `<button class="btn d btn-sm" onclick="demoteUser('${u.id}')">⬇ Demote</button>` : ''}${u.id === S.user.uid ? '<span style="color:var(--mu);font-size:11px">(you)</span>' : ''}</td></tr>`).join('')}</table></div>` : '<div class="empty">No users yet.</div>'}</div>`;
+}
+
+function vSettings(){
+  const st = S.settings;
+  return `<div class="card"><h2>School settings</h2><p style="color:var(--mu);font-size:12.5px;margin-bottom:16px">These values print at the top of every report card.</p>
+      <div class="grid g-2">
+        <div class="row"><label style="flex:1">School name<input id="st-name" value="${E(st.name||SCHOOL.name)}"></label></div>
+        <div class="row"><label style="flex:1">School code<input id="st-code" value="${E(st.code||SCHOOL.code)}"></label></div>
+        <div class="row"><label style="flex:1">District<input id="st-district" value="${E(st.district||SCHOOL.district)}"></label></div>
+        <div class="row"><label style="flex:1">Academic year<input id="st-year" value="${E(st.year||SCHOOL.year)}"></label></div>
+        <div class="row"><label style="flex:1">Email<input id="st-email" value="${E(st.email||SCHOOL.email)}"></label></div>
+        <div class="row"><label style="flex:1">Phone<input id="st-phone" value="${E(st.phone||SCHOOL.phone)}"></label></div>
+        <div class="row" style="grid-column:1/-1"><label style="flex:1">Head teacher<input id="st-ht" value="${E(st.headTeacher||SCHOOL.headTeacher)}"></label></div>
+      </div><div style="margin-top:18px"><button class="btn" onclick="saveSettings()">💾 Save settings</button></div></div>`;
+}
+
+function vBackup(){
+  return `<div class="card"><h2>Backup &amp; restore</h2><p style="color:var(--mu);font-size:12.5px;margin-bottom:14px">Export all Firestore data to JSON, or restore a previous backup.</p><div class="row"><button class="btn" onclick="exportBackup()">📥 Export</button><label class="btn g" style="cursor:pointer">📤 Import<input type="file" id="bk-imp" accept="application/json" style="display:none" onchange="importBackup(event)"></label><button class="btn d" onclick="clearAllData()">🗑 Clear all</button><button class="btn s" onclick="loadDemoData()">✨ Demo data</button></div></div>
+    <div class="card"><h2>Data summary</h2><div class="grid g-4"><div class="stat-card"><div class="label">Classes</div><div class="value">${S.cl.length}</div></div><div class="stat-card"><div class="label">Students</div><div class="value">${S.st.length}</div></div><div class="stat-card"><div class="label">Users</div><div class="value">${S.users.length}</div></div><div class="stat-card"><div class="label">Subjects</div><div class="value">${S.cl.reduce((a,c)=>a+(c.subjects||[]).length,0)}</div></div></div></div>`;
+}
+
+// --- Action Handlers (Exposed globally for inline onclick) ---
+window.addClass = async () => {
+  const n = document.getElementById('cn').value; if (!n.trim()) return toast('Enter a class name', 'err');
+  try { await setDoc(doc(db, 'classes', ids(n)), { name: n.trim(), combo: document.getElementById('cb').value || '', subjects: [] }); S.cur = ids(n); toast('Class created'); } catch(e){ toast('Failed: ' + e.message, 'err'); }
+};
+window.addAllClasses = async () => {
+  let added = 0; try { for (const n of ['P1','P2','P3','P4','P5','P6','S1','S2','S3','S4','S5','S6']) { if (!CL(n)) { await setDoc(doc(db, 'classes', ids(n)), { name: n, combo: '', subjects: [] }); added++; } } toast(added + ' classes added'); } catch(e){ toast('Failed: ' + e.message, 'err'); }
+};
+window.deleteClass = async (id) => { if (await confirmDialog('Delete class?')) { try { await deleteDoc(doc(db, 'classes', id)); toast('Deleted'); } catch(e){ toast('Failed: ' + e.message, 'err'); } } };
+window.addSubject = async (cId) => {
+  const n = document.getElementById('bn').value.trim(), w = +document.getElementById('bw').value; if (!n || !(w > 0)) return toast('Enter subject name and max mark', 'err');
+  const c = CL(cId); const subs = c.subjects || [];
+  try { await updateDoc(doc(db, 'classes', cId), { subjects: [...subs, { id: 's' + Date.now().toString(36), n, w }] }); toast('Subject added'); } catch(e){ toast('Failed: ' + e.message, 'err'); }
+};
+window.updateSubject = async (cId, sId, name, weight) => {
+  const c = CL(cId); const subs = c.subjects.map(x => x.id === sId ? { ...x, n: name, w: +weight } : x);
+  try { await updateDoc(doc(db, 'classes', cId), { subjects: subs }); } catch(e){ toast('Failed: ' + e.message, 'err'); }
+};
+window.removeSubject = async (cId, sId) => {
+  if (!await confirmDialog('Remove this subject?')) return;
+  const c = CL(cId); const subs = c.subjects.filter(x => x.id !== sId);
+  try { await updateDoc(doc(db, 'classes', cId), { subjects: subs }); toast('Removed'); } catch(e){ toast('Failed: ' + e.message, 'err'); }
+};
+window.addStudent = async () => {
+  const n = document.getElementById('sn').value.trim(), i = document.getElementById('si').value.trim();
+  if (!n || !i) return; const id = ids(i); if (S.st.find(s => s.id === id)) return toast('ID exists', 'err');
+  try { await setDoc(doc(db, 'students', id), { name: n, uid: i, cls: S.cur }); document.getElementById('sn').value = document.getElementById('si').value = ''; toast('Registered'); } catch(e){ toast('Failed: ' + e.message, 'err'); }
+};
+window.bulkAddStudents = async () => {
+  let ok = 0; for (const l of document.getElementById('bulk').value.split('\n')) {
+    const p = l.split(','); if (p.length > 1) {
+      const n = p[0].trim(), i = p[1].trim(); const id = ids(i);
+      if (!S.st.find(s => s.id === id)) { await setDoc(doc(db, 'students', id), { name: n, uid: i, cls: S.cur }); ok++; }
+    }
+  }
+  document.getElementById('bulk').value = ''; toast(ok + ' registered');
+};
+window.deleteStudent = async (id) => { if (await confirmDialog('Delete student and marks?')) { await deleteDoc(doc(db, 'students', id)); toast('Deleted'); } };
+window.updateConduct = async (id, val) => { try { await updateDoc(doc(db, 'students', id), { ['c'+S.term]: val === '' ? null : Math.min(40, +val) }); } catch(e){} };
+window.moveClass = async (id, val) => { try { await updateDoc(doc(db, 'students', id), { cls: val }); } catch(e){} };
+window.updateMark = async (id, val, max) => {
+  try { await updateDoc(doc(db, 'students', id), { [`mt_${S.sub}_${S.term}`]: val === '' ? null : Math.min(max, Math.max(0, +val)) }); } catch(e){}
+};
+window.downloadPDF = async (id) => {
+  const s = S.st.find(x => x.id === id); if (!s) return; toast('Preparing PDF…', 'info');
+  const el = document.getElementById('one').querySelector('.rp');
+  try {
+    const blob = await html2pdf().set({ margin: 0, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4' } }).from(el).outputPdf('blob');
+    downloadBlob('Midterm-T'+S.term+'-'+ids(s.name)+'.pdf', blob); toast('PDF saved');
+  } catch(e){ toast('PDF failed', 'err'); }
+};
+window.downloadClassPDF = async () => {
+  const cn = CUR().name; toast('Preparing…', 'info');
+  document.getElementById('all').innerHTML = MS().sort((a,b)=>a.name.localeCompare(b.name)).map(x => `<div class="pg">${report(x)}</div>`).join('');
+  try {
+    const blob = await html2pdf().set({ margin: 0, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4' }, pagebreak: { mode: ['css'], before: '.pg' } }).from(document.getElementById('all')).outputPdf('blob');
+    downloadBlob('Midterm-T'+S.term+'-'+ids(cn)+'-all.pdf', blob); toast('PDF saved');
+  } catch(e){ toast('PDF failed', 'err'); }
+};
+window.promoteUser = async (id) => { if(await confirmDialog('Promote to admin?')) { await updateDoc(doc(db, 'users', id), { role: 'admin' }); toast('Promoted'); } };
+window.demoteUser = async (id) => { if(await confirmDialog('Demote to teacher?')) { await updateDoc(doc(db, 'users', id), { role: 'teacher' }); toast('Demoted'); } };
+window.saveSettings = async () => {
+  const v = id => document.getElementById(id).value.trim();
+  try { await setDoc(doc(db, 'settings', 'school'), { name: v('st-name'), code: v('st-code'), district: v('st-district'), year: v('st-year'), email: v('st-email'), phone: v('st-phone'), headTeacher: v('st-ht') }); toast('Saved'); } catch(e){ toast('Failed', 'err'); }
+};
+window.exportBackup = () => {
+  const data = { version: 2, exportedAt: new Date().toISOString(), classes: Object.fromEntries(S.cl.map(c=>[c.id,c])), students: Object.fromEntries(S.st.map(s=>[s.id,s])), settings: S.settings };
+  downloadBlob('backup-'+Date.now()+'.json', new Blob([JSON.stringify(data,null,2)], {type:'application/json'})); toast('Backup exported');
+};
+window.importBackup = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text()); if (!await confirmDialog('Import will add/replace data. Continue?')) return; toast('Importing…', 'info');
+    if (data.classes) for (const [id, cls] of Object.entries(data.classes)) await setDoc(doc(db,'classes',id), cls);
+    if (data.students) { const entries = Object.entries(data.students); for (let i = 0; i < entries.length; i += 500) { const batch = writeBatch(db); for (const [id, stu] of entries.slice(i, i+500)) batch.set(doc(db,'students',id), stu); await batch.commit(); } }
+    if (data.settings) await setDoc(doc(db,'settings','school'), data.settings); toast('Restored');
+  } catch(e){ toast('Import failed', 'err'); }
+};
+window.clearAllData = async () => {
+  if (!await confirmDialog('Delete ALL data?')) return;
+  try { const batch = writeBatch(db); S.cl.forEach(c => batch.delete(doc(db,'classes',c.id))); S.st.forEach(s => batch.delete(doc(db,'students',s.id))); if (Object.keys(S.settings).length) batch.delete(doc(db,'settings','school')); await batch.commit(); toast('Cleared'); } catch(e){ toast('Failed', 'err'); }
+};
+window.loadDemoData = async () => {
+  if (!await confirmDialog('Load demo classes and students?')) return; toast('Loading…', 'info');
+  const demo = [
+    { id:'P4A', name:'P4A', combo:'PRIMARY', subjects:[ {id:'sp4m',n:'Mathematics',w:50},{id:'sp4e',n:'English',w:50},{id:'sp4k',n:'Kinyarwanda',w:50},{id:'sp4s',n:'Science',w:50} ] },
+    { id:'P5A', name:'P5A', combo:'PRIMARY', subjects:[ {id:'sp5m',n:'Mathematics',w:50},{id:'sp5e',n:'English',w:50},{id:'sp5k',n:'Kinyarwanda',w:50},{id:'sp5s',n:'Science',w:50} ] }
+  ];
+  for (const c of demo) if (!CL(c.id)) await setDoc(doc(db,'classes',c.id), c);
+  const names = ['Aline Uwase','Eric Nkurunziza','Claudine Mukamana','Jean Bosco Habimana'];
+  let n = 0;
+  for (const c of demo) { for (let i = 0; i < 4; i++) { const nm = names[i]; const uid = '271205' + (n+i+1).toString().padStart(6,'0'); const id = ids(uid); if (!S.st.find(s => s.id === id)) { const d = { name: nm, uid, cls: c.id, c1: 25+Math.floor(Math.random()*15) }; for (const sub of c.subjects) d['mt_'+sub.id+'_1'] = Math.floor(Math.random()*sub.w); await setDoc(doc(db,'students',id), d); } } n += 4; }
+  toast('Demo loaded');
+};
+</script>
+</body>
+</html>
