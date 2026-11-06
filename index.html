@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>G.S. ST ETIENNE SHYOGWE – Mid-term Report Portal</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<!--
+  ============================================================================
+  FIREBASE SETUP — DO THIS ONCE IN THE FIREBASE CONSOLE
+  ============================================================================
+
+  PROJECT: mid-term-report-8d8b8
+  CONSOLE: https://console.firebase.google.com/project/mid-term-report-8d8b8
+
+  Step 1 — Enable Google Sign-In:
+    Authentication → Sign-in method → Google → Enable → Save
+    Authentication → Settings → Authorized domains → add:
+       • localhost           (for local testing)
+       • your-domain.com     (for production)
+
+  Step 2 — Enable Firestore:
+    Firestore Database → Create database → Start in production mode
+    → choose a region close to Rwanda (e.g. europe-west1 or us-central1)
+
+  Step 3 — Paste these Firestore Rules (Rules tab):
+    ────────────────────────────────────────────────────────────
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+
+        function isSignedIn() {
+          return request.auth != null;
+        }
+        function isAdmin() {
+          return isSignedIn() &&
+            exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        }
+
+        match /users/{uid} {
+          allow read:   if isSignedIn();
+          allow create: if isSignedIn() && request.auth.uid == uid;
+          allow update: if isAdmin() ||
+                        (request.auth.uid == uid &&
+                         request.resource.data.role == resource.data.role);
+          allow delete: if isAdmin();
+        }
+
+        match /classes/{id} {
+          allow read:  if isSignedIn();
+          allow write: if isAdmin();
+        }
+
+        match /students/{id} {
+          allow read:          if isSignedIn();
+          allow create, update: if isSignedIn();
+          allow delete:        if isAdmin();
+        }
+
+        match /settings/{id} {
+          allow read:  if isSignedIn();
+          allow write: if isAdmin();
+        }
+      }
+    }
+    ────────────────────────────────────────────────────────────
+
+  Step 4 — First sign-in:
+    The FIRST person to sign in with Google becomes ADMIN automatically.
+    Every subsequent sign-in becomes a TEACHER (admin can promote them
+    from the Users tab).
+
+  NOTE ON SECURITY:
+    The "first user becomes admin" logic runs in the browser, so there is
+    a brief window before anyone has signed in where a malicious visitor
+    could theoretically sign in first. For a school portal this is fine —
+    just make sure you (the admin) sign in FIRST before sharing the link.
+  ============================================================================
+-->
+
+<style>
+:root{--bg:#000d1a;--sf:#0a1c33;--sf2:#0f2440;--tx:#f1f5f9;--mu:#9fb0c8;--bd:rgba(255,255,255,.14);--pr:#00a896;--pr2:#00d4bb;--pt:#00131f;--gd:#f2b705;--rd:#e5484d;--gn:#22c55e;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.5 Inter,system-ui,Arial,sans-serif;overflow-x:hidden}
+#oc{position:fixed;left:0;top:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.lay{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+
+.card,.gc{background:rgba(0,24,48,.85);backdrop-filter:blur(16px);border:1px solid var(--bd);box-shadow:0 20px 40px rgba(0,0,0,.4);border-radius:12px;padding:16px;margin-bottom:16px}
+.gc{max-width:440px;width:100%;text-align:center;padding:32px;margin:0}
+.gc img{width:84px;height:84px;border-radius:8px;background:#fff}
+.gc h1{font-size:22px;margin:14px 0 6px}
+.gc p{color:var(--mu);margin:6px 0 20px}
+
+nav.top{position:sticky;top:0;z-index:20;background:rgba(0,13,26,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.brand{display:flex;gap:10px;align-items:center;cursor:pointer;background:none;border:0;color:inherit;text-align:left;padding:0}
+.brand img{width:46px;height:46px;border-radius:6px;background:#fff}
+.brand b{display:block;font-size:15px;letter-spacing:.02em}
+.brand span{font-size:12px;color:var(--pr)}
+.nl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.nb{background:transparent;border:0;color:inherit;padding:7px 11px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:.15s}
+.nb:hover{background:rgba(255,255,255,.1)}
+.badge{font-size:12px;color:var(--pr);background:rgba(255,255,255,.07);border:1px solid var(--bd);padding:4px 10px;border-radius:8px;font-weight:600}
+.profile{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:40px}
+.profile img{width:28px;height:28px;border-radius:50%;background:#fff}
+.profile span{font-size:13px;font-weight:600}
+
+main{padding:24px 16px;max-width:1150px;width:100%;margin:0 auto;flex:1;min-width:0}
+footer{text-align:center;font-size:12px;color:var(--mu);padding:14px;background:rgba(0,13,26,.92);border-top:1px solid var(--bd)}
+
+.hero{text-align:center;padding:36px 22px;max-width:880px;margin:16px auto}
+.hero img{width:96px;height:96px;border-radius:10px;background:#fff}
+.hero h2{font-size:32px;line-height:1.15;margin:14px 0 10px}
+.hero p{color:var(--mu);max-width:600px;margin:0 auto}
+.tri{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:26px;text-align:left}
+.tri button{background:rgba(0,24,48,.85);border:1px solid var(--bd);border-radius:12px;padding:18px;color:inherit;text-align:left;cursor:pointer;transition:.15s}
+.tri button:hover{border-color:var(--pr);transform:translateY(-2px)}
+.tri b{display:block;font-size:15px;margin-bottom:4px}
+.tri span{font-size:13px;color:var(--mu)}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tabs button{background:rgba(0,24,48,.85);border:1px solid var(--bd);color:inherit;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;transition:.15s}
+.tabs button:hover{border-color:var(--pr)}
+.tabs button.on{background:var(--pr);color:var(--pt);border-color:var(--pr)}
+
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);z-index:50;display:grid;place-items:center;padding:16px;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.er{background:rgba(229,72,77,.15);border:1px solid var(--rd);padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:14px;text-align:left;color:#ffb3b5}
+
+h2{margin:0 0 14px;font-size:22px}
+
+.btn{background:var(--pr);color:var(--pt);border:0;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;transition:.15s}
+.btn:hover{background:var(--pr2)}
+.btn.s{background:transparent;color:var(--pr);border:1px solid var(--pr)}
+.btn.s:hover{background:rgba(0,168,150,.12)}
+.btn.d{background:var(--rd);color:#fff}
+.btn.d:hover{background:#ef5350}
+.btn.g{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.btn.g:hover{background:rgba(255,255,255,.06)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+button,input,select,textarea{font:inherit;color:inherit}
+.btn:focus-visible,.nb:focus-visible,.tabs button:focus-visible,.tri button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--gd);outline-offset:1px}
+
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.row label{display:grid;gap:4px;font-size:13px;color:var(--mu)}
+input,select,textarea{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;transition:.15s}
+input:focus,select:focus,textarea:focus{border-color:var(--pr);outline:none}
+
+.tw{overflow-x:auto}
+table.t{border-collapse:collapse;width:100%}
+table.t th,table.t td{border-bottom:1px solid var(--bd);padding:7px 8px;text-align:left}
+table.t th{color:var(--pr);font-size:13px;font-weight:600}
+table.t tr:hover td{background:rgba(0,168,150,.04)}
+table.t input.m{width:80px}
+table.t img.avatar{width:32px;height:32px;border-radius:50%;background:#fff}
+
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.stat div{border-left:4px solid var(--gd);padding:4px 12px}
+.stat b{font-size:26px;display:block;font-weight:700}
+.stat span{color:var(--mu);font-size:13px}
+
+.bar-wrap{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.bar-row{display:grid;grid-template-columns:110px 1fr 60px;gap:10px;align-items:center;font-size:13px}
+.bar-track{background:rgba(255,255,255,.08);height:8px;border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--pr),var(--pr2));border-radius:4px;transition:width .4s}
+.bar-val{text-align:right;color:var(--mu)}
+
+.empty{color:var(--mu);padding:18px;text-align:center}
+.pv{overflow-x:auto;background:#5d6b82;padding:14px;border-radius:10px}
+.search{display:flex;gap:8px;margin-bottom:12px}
+.search input{flex:1;max-width:340px}
+
+/* Google sign-in button */
+.btn-google{background:#fff;color:#1f1f1f;border:1px solid #d0d0d0;font-weight:600;border-radius:10px;padding:14px 22px;display:flex;align-items:center;gap:12px;width:100%;justify-content:center;cursor:pointer;font-size:1rem;transition:.2s;margin:8px 0}
+.btn-google:hover{background:#f5f5f5;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.google-icon{width:22px;height:22px;flex-shrink:0;background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="%23EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="%234285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="%23FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="%2334A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>') no-repeat center/contain}
+
+#toasts{position:fixed;bottom:20px;right:20px;z-index:100;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:rgba(0,168,150,.95);color:var(--pt);padding:11px 18px;border-radius:10px;font-weight:600;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.4);animation:slideIn .25s;pointer-events:auto;max-width:340px}
+.toast.err{background:rgba(229,72,77,.95);color:#fff}
+.toast.info{background:rgba(15,36,64,.98);color:var(--tx);border:1px solid var(--bd)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* report card */
+.rp{width:794px;min-height:1120px;background:#fff;color:#000;font:11px Arial,Helvetica,sans-serif;padding:24px;margin:0 auto;box-sizing:border-box}
+.rp table{border-collapse:collapse;width:100%}
+.rp td,.rp th{border:1px solid #000;padding:3px 2px;text-align:center;font-size:10px}
+.rp td.l{text-align:left;padding-left:4px}
+.rp .r{color:#e00}
+.rp .hd{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.rp .hd div.ad{font-size:10px;line-height:1.35;width:230px}
+.rp .bx{border:1px solid #000;padding:10px 28px;font-weight:700;font-size:14px;text-align:center;margin-top:6px}
+.rp .nm{border:2px solid #000;padding:8px;display:flex;justify-content:space-between;font-size:11px;margin-bottom:10px}
+.rp .gs{background:#bbb;text-align:left}
+.rp .sec{display:flex;gap:10px;margin-top:10px}
+.rp .gr td{height:20px}
+.rp .bd{border:2px solid #000;padding:8px;font-size:10px;flex:1;display:flex;justify-content:space-between;gap:10px}
+
+@media(max-width:760px){main{padding:14px 10px}.hero h2{font-size:25px}.rp{width:100%;min-height:auto;padding:14px}}
+
+@media print{
+  body{background:#fff;color:#000}
+  #oc,nav.top,footer,.tabs,.row,.btn,.mo,#toasts{display:none!important}
+  main{padding:0;max-width:none}
+  .card,.pv{background:#fff;border:0;box-shadow:none;padding:0;margin:0}
+  .rp{margin:0;padding:14mm;width:auto;min-height:auto;box-shadow:none;page-break-after:always}
+}
+</style>
+</head>
+<body>
+<canvas id="oc"></canvas>
+<div class="lay" id="root"></div>
+<div id="toasts"></div>
+
+<script type="module">
+/* =========================================================
+   IMPORTS
+   ========================================================= */
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js';
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+  getRedirectResult, signOut as fbSignOut, onAuthStateChanged
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {
+  getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc,
+  deleteDoc, onSnapshot, writeBatch
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+/* =========================================================
+   FIREBASE INIT — your credentials
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyCZq44tA-uO2aEqk3vGS1b8MSUy7NPTpqg",
+  authDomain: "mid-term-report-8d8b8.firebaseapp.com",
+  projectId: "mid-term-report-8d8b8",
+  storageBucket: "mid-term-report-8d8b8.firebasestorage.app",
+  messagingSenderId: "517868785910",
+  appId: "1:517868785910:web:80849a8a2bdd1549011cd7",
+  measurementId: "G-70T6CTNWXD"
+};
+
+const app = initializeApp(firebaseConfig);
+try { getAnalytics(app); } catch (e) { /* analytics may be blocked */ }
+const auth = getAuth(app);
+const db   = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+/* =========================================================
+   SCHOOL CONSTANTS
+   ========================================================= */
+const SCHOOL = {
+  name: 'G.S. ST ETIENNE SHYOGWE',
+  code: '271205',
+  district: 'Muhanga',
+  email: 'placidiacius01@yahoo.fr',
+  phone: '0788441158',
+  headTeacher: 'NTIGURIRWA Placide',
+  year: '2025/2026'
+};
+
+const LOGO = 'data:image/jpeg;base64,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';
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const S = {
+  route: 'home',        // 'home' | 'lookup' | 'portal'
+  user: null,           // { uid, email, name, photoURL, role }
+  isAdmin: false,
+  ready: false,         // true after first auth resolution
+  q: '',
+  search: '',
+  term: 1,
+  tab: 'ov',
+  cur: null,
+  sel: null,
+  sub: null,
+  cl: [],
+  st: [],
+  users: [],
+  settings: {},
+  calc: {},
+  ranks: {},
+  loading: false
+};
+
+const CL   = id => S.cl.find(c => c.id === id);
+const CUR  = () => CL(S.cur);
+const SB   = () => CUR()?.subjects || [];
+const MS   = () => S.st.filter(s => s.cls === S.cur);
+const level = c => /^S/i.test(c?.name || '') ? 'SECONDARY' : 'PRIMARY';
+const ord  = n => { const m = /^([PS])(\d+)/i.exec(n); return m ? (m[1].toUpperCase() === 'P' ? 0 : 10) + +m[2] : 99; };
+const cmp  = (a, b) => ord(a.name) - ord(b.name) || a.name.localeCompare(b.name);
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const E  = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+const ids = s => String(s).replace(/[^A-Za-z0-9]/g, '');
+const F   = n => String(Math.round(n * 10) / 10);
+const G   = p => p >= 80 ? 'A' : p >= 75 ? 'B' : p >= 70 ? 'C' : p >= 65 ? 'D' : p >= 60 ? 'E' : p >= 50 ? 'S' : 'F';
+const TC  = p => p >= 80 ? 'Excellent' : p >= 75 ? 'Very good' : p >= 70 ? 'Good' : p >= 65 ? 'Satisfactory' : p >= 60 ? 'Adequate' : p >= 50 ? 'Minimum Pass' : 'Fail';
+
+function toast(msg, type = '') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type === 'err' ? 'err' : type === 'info' ? 'info' : '');
+  t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; t.style.transition = '.25s'; }, 3000);
+  setTimeout(() => t.remove(), 3400);
+}
+
+function confirmDialog(msg) {
+  return new Promise(resolve => {
+    const mo = document.createElement('div');
+    mo.className = 'mo';
+    mo.innerHTML = `<div class="gc" style="max-width:380px"><h1 style="font-size:17px">Confirm</h1><p style="color:var(--tx);margin:12px 0 18px">${E(msg)}</p><div class="row" style="justify-content:center"><button class="btn g" id="cno">Cancel</button><button class="btn d" id="cyes">Confirm</button></div></div>`;
+    document.body.appendChild(mo);
+    mo.querySelector('#cyes').onclick = () => { mo.remove(); resolve(true); };
+    mo.querySelector('#cno').onclick  = () => { mo.remove(); resolve(false); };
+  });
+}
+
+function downloadBlob(name, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* =========================================================
+   FIRESTORE HELPERS
+   ========================================================= */
+const FS = {
+  async set(path, data) {
+    const [col, ...rest] = path.split('/');
+    await setDoc(doc(db, col, ...rest), data);
+  },
+  async update(path, data) {
+    const [col, ...rest] = path.split('/');
+    await updateDoc(doc(db, col, ...rest), data);
+  },
+  async delete(path) {
+    const [col, ...rest] = path.split('/');
+    await deleteDoc(doc(db, col, ...rest));
+  },
+  async get(path) {
+    const [col, ...rest] = path.split('/');
+    return getDoc(doc(db, col, ...rest));
+  }
+};
+
+/* =========================================================
+   AUTH — Google only
+   ========================================================= */
+async function googleSignIn() {
+  try {
+    await signInWithPopup(auth, googleProvider);
+  } catch (e) {
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request') {
+      toast('Popup blocked — redirecting…', 'info');
+      await signInWithRedirect(auth, googleProvider);
+    } else if (e.code === 'auth/popup-closed-by-user') {
+      // user closed popup; no-op
+    } else {
+      toast('Sign-in failed: ' + (e.message || e.code), 'err');
+    }
+  }
+}
+
+async function googleSignOut() {
+  try {
+    await fbSignOut(auth);
+    S.user = null;
+    S.isAdmin = false;
+    S.route = 'home';
+    S.tab = 'ov';
+    S.cl = []; S.st = []; S.users = []; S.settings = {};
+    toast('Signed out', 'info');
+    draw();
+  } catch (e) {
+    toast('Sign-out failed', 'err');
+  }
+}
+
+/**
+ * Get existing user doc, or create a new one.
+ * First user to ever sign in becomes admin.
+ */
+async function getOrCreateProfile(user) {
+  const userRef = doc(db, 'users', user.uid);
+  const snap = await getDoc(userRef);
+
+  if (snap.exists()) return snap.data();
+
+  // First user becomes admin
+  let hasAdmin = false;
+  try {
+    const all = await getDocs(collection(db, 'users'));
+    hasAdmin = all.docs.some(d => d.data().role === 'admin');
+  } catch (e) {
+    console.warn('Could not read users collection', e);
+  }
+
+  const profile = {
+    email: user.email,
+    name: user.displayName || user.email,
+    photoURL: user.photoURL || '',
+    role: hasAdmin ? 'teacher' : 'admin',
+    createdAt: new Date().toISOString()
+  };
+
+  try {
+    await setDoc(userRef, profile);
+  } catch (e) {
+    toast('Could not save profile: ' + e.message, 'err');
+  }
+  return profile;
+}
+
+/* =========================================================
+   AUTH STATE — the single source of truth
+   ========================================================= */
+onAuthStateChanged(auth, async (fbUser) => {
+  if (!fbUser) {
+    S.user = null;
+    S.isAdmin = false;
+    S.route = 'home';
+    S.ready = true;
+    draw();
+    return;
+  }
+
+  try {
+    const profile = await getOrCreateProfile(fbUser);
+    S.user = {
+      uid: fbUser.uid,
+      email: profile.email || fbUser.email,
+      name: profile.name || fbUser.displayName || fbUser.email,
+      photoURL: profile.photoURL || fbUser.photoURL || '',
+      role: profile.role || 'teacher'
+    };
+    S.isAdmin = S.user.role === 'admin';
+    if (S.route === 'home') {
+      S.route = 'portal';
+      S.tab = S.isAdmin ? 'ov' : 'students';
+    }
+  } catch (e) {
+    console.error('Profile load failed', e);
+    toast('Could not load user profile: ' + e.message, 'err');
+    S.ready = true;
+    draw();
+    return;
+  }
+  S.ready = true;
+  draw();
+});
+
+// Handle redirect fallback on page load
+getRedirectResult(auth).catch(() => {});
+
+/* =========================================================
+   FIRESTORE REALTIME LISTENERS
+   ========================================================= */
+let listenersAttached = false;
+function attachListeners() {
+  if (listenersAttached) return;
+  listenersAttached = true;
+
+  onSnapshot(collection(db, 'classes'),
+    snap => {
+      S.cl = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      recalc();
+      if (S.ready) draw();
+    },
+    err => console.error('classes snapshot', err)
+  );
+
+  onSnapshot(collection(db, 'students'),
+    snap => {
+      S.st = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      recalc();
+      if (S.ready) draw();
+    },
+    err => console.error('students snapshot', err)
+  );
+
+  onSnapshot(doc(db, 'settings', 'school'),
+    snap => {
+      S.settings = snap.exists() ? snap.data() : {};
+      if (S.ready) draw();
+    },
+    err => console.error('settings snapshot', err)
+  );
+
+  onSnapshot(collection(db, 'users'),
+    snap => {
+      S.users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (S.ready) draw();
+    },
+    err => console.error('users snapshot', err)
+  );
+}
+
+onAuthStateChanged(auth, u => { if (u) attachListeners(); });
+
+/* =========================================================
+   CALCULATIONS
+   ========================================================= */
+function calc(s) {
+  const sb = CL(s.cls)?.subjects || [];
+  const k = S.term;
+  const mx = sb.reduce((a, b) => a + b.w, 0) || 1;
+  let has = false, tot = 0;
+  const r = sb.map(b => {
+    const v = s['mt_' + b.id + '_' + k];
+    const a = (v == null || v === '') ? null : +v;
+    if (a != null) has = true;
+    tot += a || 0;
+    return { a, p: (a || 0) / b.w * 100 };
+  });
+  return { sb, r, tot, mx, has, p: tot / mx * 100 };
+}
+
+function recalc() {
+  S.calc = {};
+  S.ranks = {};
+  S.st.forEach(s => S.calc[s.id] = calc(s));
+  S.cl.forEach(cl => {
+    const L = S.st.filter(s => s.cls === cl.id && S.calc[s.id].has);
+    L.forEach(s => {
+      S.ranks[s.id] = (1 + L.filter(o => S.calc[o.id].p > S.calc[s.id].p).length) + ' out of ' + L.length;
+    });
+  });
+}
+
+/* =========================================================
+   REPORT CARD (Rwanda CAMIS layout)
+   ========================================================= */
+function report(s) {
+  const c = S.calc[s.id];
+  const cl = CL(s.cls);
+  const lv = level(cl);
+  const k = S.term;
+  const cv = s['c' + k];
+  const cd = (cv == null || cv === '') ? '-' : cv;
+  const rd = p => p < 50 ? 'r' : '';
+  const st = S.settings;
+  const rows = c.sb.map((b, i) => {
+    const x = c.r[i];
+    const h = x.a != null;
+    return `<tr><td class="l">${E(b.n)}</td><td><b>${b.w}</b></td><td>${h ? x.a : '-'}</td><td class="${h ? rd(x.p) : ''}">${h ? F(x.p) + '%' : '-'}</td><td>${h ? G(x.p) : '-'}</td></tr>`;
+  }).join('') || '<tr><td colspan="5">No subjects registered for this class yet.</td></tr>';
+
+  return `<div class="rp"><div class="hd">
+    <div class="ad">REPUBLIC OF RWANDA<br>MINISTRY OF EDUCATION<br>DISTRICT : ${E(st.district || SCHOOL.district)}<br>School: ${E(st.name || SCHOOL.name)}<br>School Code: ${E(st.code || SCHOOL.code)}<br>E-mail: ${E(st.email || SCHOOL.email)}<br>Phone: ${E(st.phone || SCHOOL.phone)}</div>
+    <div class="bx">STUDENT REPORT CARD:<br>MID-TERM ${lv}</div>
+    <img src="${LOGO}" width="84" height="84" alt="School logo">
+  </div>
+  <div class="nm"><div><b>Names:</b> ${E(s.name)}<br><b>Student Unique Identifier:</b> ${E(s.uid)}</div>
+  <div style="text-align:right"><b>Academic Year:</b> ${E(st.year || SCHOOL.year)}<br><b>Term:</b> ${k}<br><b>Level:</b> ${lv}<br><b>Class:</b> ${E(cl?.name || '')}<br><b>Combination:</b> ${E(cl?.combo || lv)}</div></div>
+  <table class="mt"><tr><th style="text-align:left">SUBJECT</th><th>MAXIMUM</th><th>MARKS</th><th>%</th><th>GR</th></tr>
+  <tr><td class="l"><b>Conduct</b></td><td><b>40</b></td><td><b>${cd}</b></td><td colspan="2"></td></tr>
+  <tr><td colspan="5" class="gs">All Subjects</td></tr>${rows}
+  <tr><td class="l"><b>Total</b></td><td><b>${c.mx}</b></td><td><b>${c.tot}</b></td><td class="${c.has ? rd(c.p) : ''}"><b>${F(c.p)}%</b></td><td><b>${c.has ? G(c.p) : '-'}</b></td></tr>
+  <tr><td class="l"><b>Percentage</b></td><td colspan="4">${F(c.p)}%</td></tr>
+  <tr><td class="l"><b>Position</b></td><td colspan="4">${S.ranks[s.id] || '-'}</td></tr>
+  <tr style="height:56px"><td class="l">Comment</td><td colspan="4">${c.has ? TC(c.p) : ''}</td></tr>
+  <tr style="height:34px"><td class="l">Class teacher's Signature</td><td colspan="4"></td></tr>
+  <tr style="height:34px"><td class="l">Parent's Signature</td><td colspan="4"></td></tr></table>
+  <div class="sec"><table style="width:70%"><tr><td rowspan="2" class="l">Grading scale</td><td class="l">Final Grade</td><td>100-80</td><td>79-75</td><td>74-70</td><td>69-65</td><td>64-60</td><td>59-50</td><td>49-0</td></tr><tr><td class="l">Letter Grade</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>S</td><td>F</td></tr></table></div>
+  <div class="sec"><div class="bd"><div><b>Abbreviations</b><br><b>GR:</b> Letter grade<br><b>TOT:</b> Total<br><b>MAX:</b> Maximum</div>
+  <div><b>HEADTEACHER</b><br>${E(st.headTeacher || SCHOOL.headTeacher)}</div><div style="align-self:flex-start">Signature and Stamp</div></div></div>
+  </div>`;
+}
+
+/* =========================================================
+   OCEAN CANVAS
+   ========================================================= */
+function initOcean() {
+  const cv = $('#oc'), x = cv.getContext('2d');
+  const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let w, h, st = 0;
+  const rs = () => { w = cv.width = innerWidth; h = cv.height = innerHeight; };
+  rs();
+  addEventListener('resize', rs);
+  const mk = p => Object.assign(p, { x: Math.random() * w, y: h + Math.random() * 100, r: Math.random() * 2.5 + 1, v: Math.random() * 1.2 + .4, a: Math.random() * .4 + .2 });
+  const P = Array.from({ length: 50 }, () => mk({}));
+  const fr = () => {
+    x.clearRect(0, 0, w, h);
+    const g = x.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#000d1a'); g.addColorStop(.5, '#001a33'); g.addColorStop(1, '#00050d');
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    P.forEach(p => {
+      if (!rm) p.y -= p.v;
+      if (p.y < -10) mk(p);
+      x.fillStyle = `rgba(0,168,150,${p.a})`;
+      x.beginPath(); x.arc(p.x, p.y, p.r, 0, 6.283); x.fill();
+    });
+    st += .02;
+    x.fillStyle = 'rgba(0,168,150,.04)';
+    x.beginPath(); x.moveTo(0, h);
+    for (let i = 0; i <= w; i += 20) x.lineTo(i, Math.sin(i * .01 + st) * 18 + h - 80);
+    x.lineTo(w, h); x.fill();
+    if (!rm) requestAnimationFrame(fr);
+  };
+  fr();
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+function draw() {
+  if (!S.ready) return renderLoading();
+  const r = S.route === 'portal' && !S.user ? 'home' : S.route;
+  if (r === 'home')   return renderHome();
+  if (r === 'lookup') return renderLookup();
+  renderPortal();
+}
+
+function renderLoading() {
+  $('#root').innerHTML = `<div style="display:grid;place-items:center;min-height:100vh;padding:20px">
+    <div class="gc" style="margin:0">
+      <img src="${LOGO}" alt="School logo">
+      <h1>Loading…</h1>
+      <p>Checking authentication status</p>
+    </div>
+  </div>`;
+}
+
+function navHtml() {
+  return `<nav class="top">
+    <button class="brand" data-r="home">
+      <img src="${LOGO}" alt="School logo">
+      <div><b>${E(S.settings.name || SCHOOL.name)}</b><span>Mid-term Report Portal · Code ${E(S.settings.code || SCHOOL.code)}</span></div>
+    </button>
+    <div class="nl">
+      <button class="nb" data-r="home">Home</button>
+      ${S.user
+        ? `<button class="nb" data-r="lookup">Student Lookup</button>
+           <button class="nb" data-r="portal">Dashboard</button>
+           <div class="profile">
+             ${S.user.photoURL ? `<img src="${E(S.user.photoURL)}" alt="">` : ''}
+             <span>${E(S.user.name)}</span>
+           </div>
+           <span class="badge">${S.user.role === 'admin' ? 'Admin' : 'Teacher'}</span>
+           <button class="nb" id="lo">Sign out</button>`
+        : `<button class="btn" id="gsi">Sign in with Google</button>`}
+    </div>
+  </nav>`;
+}
+
+function page(inner) {
+  $('#root').innerHTML = `${navHtml()}
+    <main>${inner}</main>
+    <footer>© ${new Date().getFullYear()} ${E(S.settings.name || SCHOOL.name)} · Mid-term reports · Firebase-powered</footer>`;
+  $$('[data-r]').forEach(b => b.onclick = () => { S.route = b.dataset.r; draw(); });
+  const lo = $('#lo');
+  if (lo) lo.onclick = googleSignOut;
+  const gsi = $('#gsi');
+  if (gsi) gsi.onclick = googleSignIn;
+}
+
+function renderHome() {
+  if (S.user) {
+    page(`<div class="card hero">
+      <img src="${LOGO}" alt="School logo">
+      <h2>Welcome back, ${E(S.user.name)}</h2>
+      <p>You are signed in as <b>${S.user.role === 'admin' ? 'Administrator' : 'Teacher'}</b> · ${E(S.user.email)}</p>
+      <div class="tri">
+        <button data-r="lookup"><b>Student Lookup</b><span>Find a report card by Student Unique ID.</span></button>
+        <button data-r="portal"><b>Dashboard</b><span>Manage students, marks and report cards.</span></button>
+      </div>
+    </div>`);
+  } else {
+    page(`<div class="card hero">
+      <img src="${LOGO}" alt="School logo">
+      <h2>Mid-term Academic Reporting Portal</h2>
+      <p>Official <b>${E(S.settings.name || SCHOOL.name)}</b> mark entry and mid-term report cards. Sign in with your Google account to continue.</p>
+      <div style="max-width:380px;margin:24px auto 8px">
+        <button class="btn-google" id="gsi2">
+          <span class="google-icon"></span> Sign in with Google
+        </button>
+      </div>
+      <p style="font-size:12px;color:var(--mu);margin-top:14px">First-time sign-in automatically becomes the school admin.</p>
+    </div>`);
+    const g2 = $('#gsi2');
+    if (g2) g2.onclick = googleSignIn;
+  }
+}
+
+function renderLookup() {
+  if (!S.user) {
+    page(`<div class="card" style="max-width:560px;margin:40px auto;text-align:center">
+      <h2>Sign in required</h2>
+      <p style="color:var(--mu);margin:8px 0 20px">Please sign in with Google to view report cards.</p>
+      <button class="btn-google" id="gsi3"><span class="google-icon"></span> Sign in with Google</button>
+    </div>`);
+    const g = $('#gsi3');
+    if (g) g.onclick = googleSignIn;
+    return;
+  }
+
+  const q = S.q;
+  const st = q && S.st.find(s => ids(s.uid) === ids(q));
+  page(`<div class="card" style="max-width:680px;margin:0 auto 16px">
+    <h2>Mid-term report card lookup</h2>
+    <div class="row">
+      <label style="flex:1;min-width:200px">Student Unique ID
+        <input id="lq" value="${E(q)}" placeholder="e.g. 271205230033">
+      </label>
+      <label>Mid-term of
+        <select id="lt">${[1,2,3].map(n => `<option value="${n}" ${n === S.term ? 'selected' : ''}>Term ${n}</option>`).join('')}</select>
+      </label>
+      <button class="btn" id="lg">Generate card</button>
+    </div>
+  </div>
+  ${q ? (st
+    ? `<div class="pv"><div id="one">${report(st)}</div></div>
+       <div class="row" style="margin-top:12px;justify-content:center">
+         <button class="btn" id="dl">Download PDF</button>
+         <button class="btn s" id="pr">Print</button>
+       </div>`
+    : `<div class="card empty">No student found with that ID. Check the number and try again.</div>`) : ''}`);
+
+  const g = $('#lg');
+  if (g) {
+    const go = () => { S.q = $('#lq').value.trim(); S.term = +$('#lt').value; recalc(); draw(); };
+    g.onclick = go;
+    $('#lq').onkeydown = e => { if (e.key === 'Enter') go(); };
+  }
+  const d = $('#dl');
+  if (d) {
+    const s = S.st.find(x => ids(x.uid) === ids(S.q));
+    d.onclick = () => pdf($('#one .rp'), 'Midterm-T' + S.term + '-' + ids(s.name) + '.pdf');
+    $('#pr').onclick = () => window.print();
+  }
+}
+
+/* =========================================================
+   PORTAL
+   ========================================================= */
+function navTabs() {
+  return S.isAdmin
+    ? [['ov','Overview'],['cs','Classes & subjects'],['students','Students'],['marks','Marks entry'],['reports','Report cards'],['users','Users'],['settings','Settings'],['backup','Backup']]
+    : [['students','Students'],['marks','Marks entry'],['reports','Report cards']];
+}
+
+function renderPortal() {
+  if (!S.cl.find(c => c.id === S.cur)) S.cur = S.cl.slice().sort(cmp)[0]?.id || null;
+  const tabs = navTabs();
+  if (!tabs.find(([k]) => k === S.tab)) S.tab = tabs[0][0];
+
+  const showClassBar = !['cs','ov','users','settings','backup'].includes(S.tab);
+  const showTermBar  = !['cs','users','settings','backup'].includes(S.tab);
+
+  page(`<h2>${S.isAdmin ? 'Admin Command Center' : 'Teacher Dashboard'}</h2>
+    <div class="tabs">${tabs.map(([k,l]) => `<button class="${S.tab === k ? 'on' : ''}" data-t="${k}">${l}</button>`).join('')}</div>
+    ${(showClassBar || showTermBar) ? `<div class="card"><div class="row">
+      ${showClassBar ? `<label>Class
+        <select id="cc">${S.cl.slice().sort(cmp).map(c => `<option value="${c.id}" ${c.id === S.cur ? 'selected' : ''}>${E(c.name)}</option>`).join('') || '<option>No classes yet</option>'}</select>
+      </label>` : ''}
+      ${showTermBar ? `<label>Mid-term of
+        <select id="tm">${[1,2,3].map(n => `<option value="${n}" ${n === S.term ? 'selected' : ''}>Term ${n}</option>`).join('')}</select>
+      </label>` : ''}
+    </div></div>` : ''}
+    ${viewFor(S.tab)}`);
+
+  $$('[data-t]').forEach(b => b.onclick = () => { S.tab = b.dataset.t; draw(); });
+  const cc = $('#cc'); if (cc) cc.onchange = e => { S.cur = e.target.value; S.sel = S.sub = null; draw(); };
+  const tm = $('#tm'); if (tm) tm.onchange = e => { S.term = +e.target.value; recalc(); draw(); };
+  bindFor(S.tab);
+}
+
+function viewFor(tab) {
+  if (!S.cl.find(c => c.id === S.cur) && !['ov','cs','users','settings','backup'].includes(tab)) {
+    return `<div class="card empty">${S.isAdmin ? 'Create a class first under Classes & subjects.' : 'The admin has not created any classes yet.'}</div>`;
+  }
+  return ({ ov: vOverview, cs: vClasses, students: vStudents, marks: vMarks, reports: vReports, users: vUsers, settings: vSettings, backup: vBackup })[tab]();
+}
+
+function bindFor(tab) {
+  ({ ov: () => {}, cs: bindClasses, students: bindStudents, marks: bindMarks, reports: bindReports, users: bindUsers, settings: bindSettings, backup: bindBackup })[tab]();
+}
+
+/* ---- Overview ---- */
+function vOverview() {
+  const L = S.st.filter(s => S.calc[s.id].has);
+  const av = L.length ? L.reduce((a, s) => a + S.calc[s.id].p, 0) / L.length : 0;
+  const lo = L.filter(s => S.calc[s.id].p < 50).length;
+  const rows = S.cl.slice().sort(cmp).map(c => {
+    const M = S.st.filter(s => s.cls === c.id && S.calc[s.id].has);
+    const avg = M.length ? M.reduce((a, s) => a + S.calc[s.id].p, 0) / M.length : 0;
+    return { name: c.name, students: S.st.filter(s => s.cls === c.id).length, subjects: (c.subjects || []).length, avg };
+  });
+  return `<h2>Overview – Term ${S.term} mid-term</h2>
+    <div class="card stat">
+      <div><b>${S.cl.length}</b><span>Classes</span></div>
+      <div><b>${S.st.length}</b><span>Students</span></div>
+      <div><b>${S.users.length}</b><span>Google accounts</span></div>
+      <div><b>${F(av)}%</b><span>School average</span></div>
+      <div><b>${lo}</b><span>Students below 50%</span></div>
+    </div>
+    <div class="card">
+      <b>Average by class</b>
+      <div class="bar-wrap">
+        ${rows.map(r => `
+          <div class="bar-row">
+            <span>${E(r.name)}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, r.avg)}%"></div></div>
+            <span class="bar-val">${r.avg ? F(r.avg) + '%' : '-'}</span>
+          </div>`).join('') || '<p class="empty">No classes yet.</p>'}
+      </div>
+    </div>`;
+}
+
+/* ---- Classes ---- */
+function vClasses() {
+  const cs = S.cl.slice().sort(cmp);
+  const c = CUR();
+  return `<h2>Classes & subjects</h2>
+    <div class="card"><div class="row">
+      <label>New class name<input id="cn" placeholder="e.g. P4A or S2B"></label>
+      <label>Combination (optional)<input id="cb" placeholder="e.g. MCB"></label>
+      <button class="btn" id="ac">Add class</button>
+      <button class="btn s" id="aq">Add P1–P6 and S1–S6</button>
+    </div></div>
+    <div class="card"><div class="row">
+      <label>Manage class<select id="cc2">${cs.map(x => `<option value="${x.id}" ${x.id === S.cur ? 'selected' : ''}>${E(x.name)}</option>`).join('') || '<option>No classes yet</option>'}</select></label>
+      ${c ? `<button class="btn d" id="dc">Delete class</button>` : ''}
+    </div></div>
+    ${c ? `<div class="card tw"><b>Subjects in ${E(c.name)}</b>
+      <p style="color:var(--mu);font-size:13px;margin:4px 0 8px">Max is the full mark for this subject in the mid-term test.</p>
+      ${(c.subjects || []).length
+        ? `<table class="t"><tr><th>Subject</th><th>Max mark</th><th></th></tr>${c.subjects.map(b => `<tr>
+            <td><input class="sn" data-s="${b.id}" value="${E(b.n)}" size="34"></td>
+            <td><input class="m sw" type="number" min="1" data-s="${b.id}" value="${b.w}"></td>
+            <td><button class="btn d" data-ds="${b.id}">Remove</button></td>
+          </tr>`).join('')}</table>`
+        : '<p class="empty">No subjects yet. Add the first one below.</p>'}
+      <div class="row" style="margin-top:12px">
+        <label>Subject name<input id="bn" size="30"></label>
+        <label>Max mark<input id="bw" type="number" min="1" value="50" style="width:90px"></label>
+        <button class="btn" id="as">Add subject</button>
+        <label>Copy from<select id="cf"><option value="">Choose class</option>${cs.filter(x => x.id !== c.id && (x.subjects || []).length).map(x => `<option value="${x.id}">${E(x.name)}</option>`).join('')}</select></label>
+      </div>
+    </div>` : ''}`;
+}
+
+function bindClasses() {
+  const mk = (n, cb) => FS.set('classes/' + ids(n), { name: n.trim(), combo: cb || '', subjects: CL(ids(n))?.subjects || [] });
+  $('#ac').onclick = async () => {
+    const n = $('#cn').value;
+    if (!n.trim()) return toast('Enter a class name', 'err');
+    try { await mk(n, $('#cb').value); S.cur = ids(n); toast('Class created'); }
+    catch (e) { toast('Create failed: ' + e.message, 'err'); }
+  };
+  $('#aq').onclick = async () => {
+    let added = 0;
+    try {
+      for (const n of ['P1','P2','P3','P4','P5','P6','S1','S2','S3','S4','S5','S6']) {
+        if (!CL(n)) { await mk(n, ''); added++; }
+      }
+      toast(added + ' classes added');
+    } catch (e) { toast('Bulk add failed: ' + e.message, 'err'); }
+  };
+  const c = CUR();
+  $('#cc2').onchange = e => { S.cur = e.target.value; draw(); };
+  if (!c) return;
+  const save = a => FS.update('classes/' + c.id, { subjects: a });
+  const sb = () => (c.subjects || []).map(x => ({ ...x }));
+  $('#dc').onclick = async () => {
+    if (await confirmDialog('Delete class ' + c.name + '? Its students stay in the database but will have no class.')) {
+      try { await FS.delete('classes/' + c.id); toast('Class deleted'); }
+      catch (e) { toast('Delete failed: ' + e.message, 'err'); }
+    }
+  };
+  $('#as').onclick = async () => {
+    const n = $('#bn').value.trim(), w = +$('#bw').value;
+    if (!n || !(w > 0)) return toast('Enter subject name and max mark', 'err');
+    try { await save([...sb(), { id: 's' + Date.now().toString(36), n, w }]); toast('Subject added'); }
+    catch (e) { toast('Failed: ' + e.message, 'err'); }
+  };
+  $('#cf').onchange = async e => {
+    const o = CL(e.target.value);
+    if (o && await confirmDialog('Replace subjects of ' + c.name + ' with those of ' + o.name + '?')) {
+      try { await save(o.subjects.map(x => ({ id: 's' + Math.random().toString(36).slice(2, 8), n: x.n, w: x.w }))); toast('Subjects copied'); }
+      catch (e) { toast('Failed: ' + e.message, 'err'); }
+    }
+  };
+  $$('[data-ds]').forEach(b => b.onclick = async () => {
+    if (await confirmDialog('Remove this subject? Its marks are no longer shown.')) {
+      try { await save(sb().filter(x => x.id !== b.dataset.ds)); toast('Subject removed'); }
+      catch (e) { toast('Failed: ' + e.message, 'err'); }
+    }
+  });
+  $$('.sn,.sw').forEach(i => i.onchange = async () => {
+    const a = sb(), x = a.find(y => y.id === i.dataset.s);
+    if (i.classList.contains('sn')) x.n = i.value.trim() || x.n;
+    else x.w = Math.max(1, +i.value || x.w);
+    try { await save(a); } catch (e) { toast('Failed: ' + e.message, 'err'); }
+  });
+}
+
+/* ---- Students ---- */
+function vStudents() {
+  const all = MS().slice().sort((a, b) => a.name.localeCompare(b.name));
+  const q = S.search.toLowerCase();
+  const M = q ? all.filter(s => s.name.toLowerCase().includes(q) || s.uid.toLowerCase().includes(q)) : all;
+  return `<h2>Students</h2>
+    <div class="card">
+      <div class="row">
+        <label>Full name<input id="sn"></label>
+        <label>Student ID<input id="si"></label>
+        <button class="btn" id="add">Register student</button>
+      </div>
+      <details style="margin-top:12px">
+        <summary style="cursor:pointer;color:var(--pr);font-weight:600">Register many students at once</summary>
+        <p style="color:var(--mu);font-size:13px">One per line: Full name, Student ID</p>
+        <textarea id="bulk" rows="5" style="width:100%"></textarea>
+        <button class="btn s" id="bl">Register all</button>
+      </details>
+    </div>
+    <div class="card tw">
+      <div class="search">
+        <input id="srch" placeholder="🔍 Search by name or ID…" value="${E(S.search)}">
+        <button class="btn s" id="clr">Clear</button>
+        <span style="color:var(--mu);align-self:center;font-size:13px">${M.length} / ${all.length} shown</span>
+      </div>
+      ${M.length ? `<table class="t">
+        <tr><th>Name</th><th>ID</th><th>Conduct, Term ${S.term} (max 40)</th>${S.isAdmin ? '<th>Class</th><th></th>' : ''}</tr>
+        ${M.map(s => `<tr>
+          <td>${E(s.name)}</td><td>${E(s.uid)}</td>
+          <td><input class="m cd" type="number" min="0" max="40" data-id="${s.id}" data-k="c${S.term}" value="${s['c' + S.term] ?? ''}"></td>
+          ${S.isAdmin ? `<td><select class="mv" data-id="${s.id}">${S.cl.slice().sort(cmp).map(c => `<option value="${c.id}" ${c.id === s.cls ? 'selected' : ''}>${E(c.name)}</option>`).join('')}</select></td>
+          <td><button class="btn d" data-del="${s.id}">Delete</button></td>` : ''}
+        </tr>`).join('')}
+      </table>` : '<p class="empty">No students in this class yet.</p>'}
+    </div>`;
+}
+
+function bindStudents() {
+  const add = async (n, i) => {
+    n = (n || '').trim(); i = (i || '').trim();
+    if (!n || !i) return false;
+    const id = ids(i);
+    if (S.st.find(s => s.id === id)) { toast('Student ID ' + i + ' already exists', 'err'); return false; }
+    try { await FS.set('students/' + id, { name: n, uid: i, cls: S.cur }); return true; }
+    catch (e) { toast('Failed: ' + e.message, 'err'); return false; }
+  };
+  $('#add').onclick = async () => {
+    if (await add($('#sn').value, $('#si').value)) {
+      $('#sn').value = $('#si').value = '';
+      toast('Student registered');
+    }
+  };
+  $('#bl').onclick = async () => {
+    let ok = 0;
+    for (const l of $('#bulk').value.split('\n')) {
+      const p = l.split(',');
+      if (p.length > 1 && await add(p[0], p[1])) ok++;
+    }
+    $('#bulk').value = '';
+    toast(ok + ' students registered');
+  };
+  $('#srch').oninput = e => { S.search = e.target.value; draw(); };
+  $('#clr').onclick = () => { S.search = ''; draw(); };
+  $$('[data-del]').forEach(b => b.onclick = async () => {
+    if (await confirmDialog('Delete this student and all their marks?')) {
+      try { await FS.delete('students/' + b.dataset.del); toast('Student deleted'); }
+      catch (e) { toast('Failed: ' + e.message, 'err'); }
+    }
+  });
+  $$('.mv').forEach(i => i.onchange = async () => {
+    try { await FS.update('students/' + i.dataset.id, { cls: i.value }); }
+    catch (e) { toast('Failed: ' + e.message, 'err'); }
+  });
+  $$('.cd').forEach(i => i.onchange = async () => {
+    try { await FS.update('students/' + i.dataset.id, { [i.dataset.k]: i.value === '' ? null : Math.min(40, +i.value) }); }
+    catch (e) { toast('Failed: ' + e.message, 'err'); }
+  });
+}
+
+/* ---- Marks ---- */
+function vMarks() {
+  const sb = SB();
+  if (!sb.length) return `<div class="card empty">${S.isAdmin ? 'Add subjects to this class under Classes & subjects.' : 'The admin has not registered subjects for this class yet.'}</div>`;
+  if (!sb.find(b => b.id === S.sub)) S.sub = sb[0].id;
+  const b = sb.find(x => x.id === S.sub), w = b.w;
+  const M = MS().slice().sort((a, c) => a.name.localeCompare(c.name));
+  return `<h2>Mid-term marks</h2>
+    <div class="card">
+      <div class="row">
+        <label>Subject<select id="sb">${sb.map(x => `<option value="${x.id}" ${x.id === S.sub ? 'selected' : ''}>${E(x.n)}</option>`).join('')}</select></label>
+      </div>
+      <p style="color:var(--mu);font-size:13px">Enter each student's Term ${S.term} mid-term mark out of ${w}. Marks save as you type.</p>
+    </div>
+    <div class="card tw">
+      ${M.length ? `<table class="t">
+        <tr><th>Student</th><th>Mark /${w}</th><th>%</th></tr>
+        ${M.map(s => {
+          const v = s[`mt_${b.id}_${S.term}`];
+          return `<tr>
+            <td>${E(s.name)}</td>
+            <td><input class="m mi" type="number" min="0" max="${w}" data-id="${s.id}" value="${v ?? ''}"></td>
+            <td>${v == null || v === '' ? '-' : F(+v / w * 100) + '%'}</td>
+          </tr>`;
+        }).join('')}
+      </table>` : '<p class="empty">No students in this class yet.</p>'}
+    </div>`;
+}
+
+function bindMarks() {
+  const sb = $('#sb');
+  if (!sb) return;
+  sb.onchange = e => { S.sub = e.target.value; draw(); };
+  const w = SB().find(x => x.id === S.sub).w;
+  $$('.mi').forEach(i => i.onchange = async () => {
+    try {
+      await FS.update('students/' + i.dataset.id, {
+        [`mt_${S.sub}_${S.term}`]: i.value === '' ? null : Math.min(w, Math.max(0, +i.value))
+      });
+    } catch (e) { toast('Failed: ' + e.message, 'err'); }
+  });
+}
+
+/* ---- Reports ---- */
+function vReports() {
+  const M = MS().slice().sort((a, b) => a.name.localeCompare(b.name));
+  if (!S.sel || !M.find(s => s.id === S.sel)) S.sel = M[0]?.id;
+  const s = M.find(x => x.id === S.sel);
+  return `<h2>Report cards</h2>
+    <div class="card">
+      <div class="row">
+        <label>Student<select id="ps">${M.map(x => `<option value="${x.id}" ${x.id === S.sel ? 'selected' : ''}>${E(x.name)}</option>`).join('')}</select></label>
+        <button class="btn" id="dl" ${s ? '' : 'disabled'}>Download PDF</button>
+        <button class="btn s" id="da" ${s ? '' : 'disabled'}>Download whole class</button>
+        <button class="btn g" id="pr" ${s ? '' : 'disabled'}>Print</button>
+      </div>
+    </div>
+    ${s ? `<div class="pv"><div id="one">${report(s)}</div></div>` : '<p class="empty">No students in this class yet.</p>'}
+    <div id="all" style="position:fixed;left:-9999px;top:0"></div>`;
+}
+
+function bindReports() {
+  const sel = $('#ps');
+  if (!sel) return;
+  sel.onchange = e => { S.sel = e.target.value; draw(); };
+  const s = S.st.find(x => x.id === S.sel);
+  const cn = CUR().name;
+  $('#dl').onclick = () => pdf($('#one .rp'), 'Midterm-T' + S.term + '-' + ids(s.name) + '.pdf');
+  $('#pr').onclick = () => window.print();
+  $('#da').onclick = () => {
+    $('#all').innerHTML = MS().sort((a, b) => a.name.localeCompare(b.name)).map(x => `<div class="pg">${report(x)}</div>`).join('');
+    pdf($('#all'), 'Midterm-T' + S.term + '-' + ids(cn) + '-all.pdf');
+  };
+}
+
+async function pdf(el, name) {
+  toast('Preparing PDF…', 'info');
+  try {
+    const blob = await html2pdf().set({
+      margin: 0,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4' },
+      pagebreak: { mode: ['css'], before: '.pg' }
+    }).from(el).outputPdf('blob');
+    downloadBlob(name, blob);
+    toast('PDF saved');
+  } catch (e) {
+    toast('PDF failed: ' + e.message, 'err');
+  }
+}
+
+/* ---- Users (admin only) ---- */
+function vUsers() {
+  if (!S.isAdmin) return `<div class="card empty">Only administrators can manage users.</div>`;
+  return `<h2>Users</h2>
+    <div class="card">
+      <p style="color:var(--mu);font-size:13px">All Google accounts that have signed in. Promote to admin or demote to teacher.</p>
+      ${S.users.length ? `<table class="t">
+        <tr><th>Photo</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
+        ${S.users.map(u => `<tr>
+          <td>${u.photoURL ? `<img class="avatar" src="${E(u.photoURL)}" alt="">` : '—'}</td>
+          <td>${E(u.name || '')}</td>
+          <td>${E(u.email || '')}</td>
+          <td><span class="badge">${E(u.role || '')}</span></td>
+          <td>
+            ${u.role === 'teacher' ? `<button class="btn s" data-promote="${u.id}">Promote to admin</button>` : ''}
+            ${u.role === 'admin' && u.id !== S.user.uid ? `<button class="btn d" data-demote="${u.id}">Demote to teacher</button>` : ''}
+            ${u.id === S.user.uid ? '<span style="color:var(--mu);font-size:12px">(you)</span>' : ''}
+          </td>
+        </tr>`).join('')}
+      </table>` : '<p class="empty">No users yet.</p>'}
+    </div>`;
+}
+
+function bindUsers() {
+  $$('[data-promote]').forEach(b => b.onclick = async () => {
+    if (!await confirmDialog('Promote this user to admin?')) return;
+    try { await FS.update('users/' + b.dataset.promote, { role: 'admin' }); toast('User promoted to admin'); }
+    catch (e) { toast('Failed: ' + e.message, 'err'); }
+  });
+  $$('[data-demote]').forEach(b => b.onclick = async () => {
+    if (!await confirmDialog('Demote this admin to teacher?')) return;
+    try { await FS.update('users/' + b.dataset.demote, { role: 'teacher' }); toast('User demoted to teacher'); }
+    catch (e) { toast('Failed: ' + e.message, 'err'); }
+  });
+}
+
+/* ---- Settings ---- */
+function vSettings() {
+  const st = S.settings;
+  return `<h2>School settings</h2>
+    <div class="card">
+      <p style="color:var(--mu);font-size:13px;margin-bottom:12px">These values print at the top of every report card.</p>
+      <div class="row">
+        <label style="flex:1;min-width:220px">School name<input id="st-name" value="${E(st.name || SCHOOL.name)}"></label>
+        <label>School code<input id="st-code" value="${E(st.code || SCHOOL.code)}"></label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <label style="flex:1;min-width:220px">District<input id="st-district" value="${E(st.district || SCHOOL.district)}"></label>
+        <label>Academic year<input id="st-year" value="${E(st.year || SCHOOL.year)}"></label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <label style="flex:1;min-width:220px">Email<input id="st-email" value="${E(st.email || SCHOOL.email)}"></label>
+        <label>Phone<input id="st-phone" value="${E(st.phone || SCHOOL.phone)}"></label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <label style="flex:1;min-width:220px">Head teacher<input id="st-ht" value="${E(st.headTeacher || SCHOOL.headTeacher)}"></label>
+      </div>
+      <div style="margin-top:16px"><button class="btn" id="st-save">Save settings</button></div>
+    </div>`;
+}
+
+function bindSettings() {
+  $('#st-save').onclick = async () => {
+    const val = id => $('#' + id).value.trim();
+    try {
+      await FS.set('settings/school', {
+        name: val('st-name'), code: val('st-code'), district: val('st-district'),
+        year: val('st-year'), email: val('st-email'), phone: val('st-phone'),
+        headTeacher: val('st-ht')
+      });
+      toast('Settings saved');
+    } catch (e) { toast('Save failed: ' + e.message, 'err'); }
+  };
+}
+
+/* ---- Backup ---- */
+function vBackup() {
+  return `<h2>Backup & restore</h2>
+    <div class="card">
+      <p style="color:var(--mu);font-size:13px">Export all Firestore data to a JSON file, or restore a previous backup.</p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="bk-exp">📥 Export backup</button>
+        <label class="btn g" style="cursor:pointer">📤 Import backup<input type="file" id="bk-imp" accept="application/json" style="display:none"></label>
+        <button class="btn d" id="bk-clr">🗑 Clear all data</button>
+        <button class="btn s" id="bk-demo">✨ Load demo data</button>
+      </div>
+    </div>
+    <div class="card">
+      <b>Firestore collections</b>
+      <ul style="color:var(--mu);font-size:13px;line-height:1.8;padding-left:20px">
+        <li>${S.cl.length} classes</li>
+        <li>${S.st.length} students</li>
+        <li>${S.users.length} users</li>
+        <li>${S.cl.reduce((a, c) => a + (c.subjects || []).length, 0)} subjects</li>
+      </ul>
+    </div>`;
+}
+
+function bindBackup() {
+  $('#bk-exp').onclick = () => {
+    const data = {
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      classes: Object.fromEntries(S.cl.map(c => [c.id, c])),
+      students: Object.fromEntries(S.st.map(s => [s.id, s])),
+      settings: S.settings
+    };
+    downloadBlob('backup-' + Date.now() + '.json', new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    toast('Backup exported');
+  };
+  $('#bk-imp').onchange = async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try {
+      const txt = await f.text();
+      const data = JSON.parse(txt);
+      if (!await confirmDialog('Import will ADD/REPLACE data in Firestore. Continue?')) return;
+      toast('Importing…', 'info');
+      if (data.classes) {
+        for (const [id, cls] of Object.entries(data.classes)) {
+          await setDoc(doc(db, 'classes', id), cls);
+        }
+      }
+      if (data.students) {
+        const entries = Object.entries(data.students);
+        for (let i = 0; i < entries.length; i += 500) {
+          const batch = writeBatch(db);
+          for (const [id, stu] of entries.slice(i, i + 500)) {
+            batch.set(doc(db, 'students', id), stu);
+          }
+          await batch.commit();
+        }
+      }
+      if (data.settings) {
+        await setDoc(doc(db, 'settings', 'school'), data.settings);
+      }
+      toast('Backup restored');
+    } catch (e) {
+      toast('Import failed: ' + e.message, 'err');
+    }
+  };
+  $('#bk-clr').onclick = async () => {
+    if (!await confirmDialog('Delete ALL classes, students, and settings from Firestore? This cannot be undone.')) return;
+    try {
+      const batch = writeBatch(db);
+      S.cl.forEach(c => batch.delete(doc(db, 'classes', c.id)));
+      S.st.forEach(s => batch.delete(doc(db, 'students', s.id)));
+      if (Object.keys(S.settings).length) batch.delete(doc(db, 'settings', 'school'));
+      await batch.commit();
+      toast('All data cleared');
+    } catch (e) { toast('Clear failed: ' + e.message, 'err'); }
+  };
+  $('#bk-demo').onclick = async () => {
+    if (!await confirmDialog('Load demo classes and students? Existing data will be preserved.')) return;
+    try { await seedDemo(); toast('Demo data loaded'); }
+    catch (e) { toast('Demo failed: ' + e.message, 'err'); }
+  };
+}
+
+/* =========================================================
+   DEMO DATA
+   ========================================================= */
+async function seedDemo() {
+  const demoClasses = [
+    { id: 'P4A', name: 'P4A', combo: 'PRIMARY', subjects: [
+      { id: 'sp4m', n: 'Mathematics', w: 50 }, { id: 'sp4e', n: 'English', w: 50 },
+      { id: 'sp4k', n: 'Kinyarwanda', w: 50 }, { id: 'sp4s', n: 'Science', w: 50 }
+    ]},
+    { id: 'P5A', name: 'P5A', combo: 'PRIMARY', subjects: [
+      { id: 'sp5m', n: 'Mathematics', w: 50 }, { id: 'sp5e', n: 'English', w: 50 },
+      { id: 'sp5k', n: 'Kinyarwanda', w: 50 }, { id: 'sp5s', n: 'Science', w: 50 }
+    ]},
+    { id: 'S1A', name: 'S1A', combo: 'MCB', subjects: [
+      { id: 'ss1m', n: 'Mathematics', w: 100 }, { id: 'ss1b', n: 'Biology', w: 100 },
+      { id: 'ss1c', n: 'Chemistry', w: 100 }, { id: 'ss1e', n: 'English', w: 100 }
+    ]}
+  ];
+  for (const c of demoClasses) {
+    if (!CL(c.id)) await setDoc(doc(db, 'classes', c.id), c);
+  }
+  const names = ['Aline Uwase','Eric Nkurunziza','Claudine Mukamana','Jean Bosco Habimana','Grace Uwera','Patrick Nsengimana','Solange Iradukunda','Emmanuel Rukundo'];
+  let n = 0;
+  for (const c of demoClasses) {
+    for (let i = 0; i < 6; i++) {
+      const nm = names[(n + i) % names.length] + ' ' + (i + 1);
+      const uid = '271205' + (n + i + 1).toString().padStart(6, '0');
+      const id = ids(uid);
+      if (S.st.find(s => s.id === id)) continue;
+      const d = { name: nm, uid, cls: c.id, c1: 25 + Math.floor(Math.random() * 15), c2: 25 + Math.floor(Math.random() * 15), c3: 25 + Math.floor(Math.random() * 15) };
+      for (const sub of c.subjects) {
+        d['mt_' + sub.id + '_1'] = Math.floor(Math.random() * sub.w);
+        d['mt_' + sub.id + '_2'] = Math.floor(Math.random() * sub.w);
+        d['mt_' + sub.id + '_3'] = Math.floor(Math.random() * sub.w);
+      }
+      await setDoc(doc(db, 'students', id), d);
+    }
+    n += 6;
+  }
+}
+
+/* =========================================================
+   BOOTSTRAP
+   ========================================================= */
+initOcean();
+draw(); // shows loading while auth resolves
+</script>
+</body>
+</html>
